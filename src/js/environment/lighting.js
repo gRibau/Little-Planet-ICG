@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export function setupLighting(scene) {
     // Sun (Directional Light)
     const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-    sunLight.position.set(10, 10, 10);
+    sunLight.position.set(10, 0, 10);
     scene.add(sunLight);
 
     // Ambient light for general visibility (probably wont add)
