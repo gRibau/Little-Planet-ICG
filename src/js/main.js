@@ -5,6 +5,7 @@ import { createSun } from './objects/sun.js';
 import { createMoon } from './objects/moon.js';
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
+import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -38,22 +39,12 @@ controls.minDistance = 50;   // Minimum zoom distance (planet radius is 5)
 controls.maxDistance = 300; // Maximum zoom distance
 camera.position.x = 100;
 
-// Animation state
-let moonOrbitAngle = 0;
-
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
     
-    // Automatic rotations
-    planet.rotation.y += 0.005; 
-    moon.rotation.y += 0.01;
-
-    // Orbit the Moon around the Planet
-    moonOrbitAngle += 0.01;
-    const orbitRadius = 80;
-    moon.position.x = planet.position.x + Math.cos(moonOrbitAngle) * orbitRadius;
-    moon.position.z = planet.position.z + Math.sin(moonOrbitAngle) * orbitRadius;
+    // Call the external animation logic
+    planetAndMoonAnimations(planet, moon);
     
     controls.update();
     renderer.render(scene, camera);
