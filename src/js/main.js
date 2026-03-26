@@ -1,24 +1,26 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createPlanet } from './objects/planet.js';
+import { setupLighting } from './environment/lighting.js';
+import { setupSkybox } from './environment/skybox.js';
 
 // Scene setup
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+// Setup Skybox (using a physical sphere for better scale)
+setupSkybox(scene, 'assets/environment/space.png');
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Planet creation
-const geometry = new THREE.SphereGeometry(5, 64, 64);
-const material = new THREE.MeshStandardMaterial({ color: 0x2244ff });
-const planet = new THREE.Mesh(geometry, material);
+// Initialize Components
+const planet = createPlanet();
 scene.add(planet);
 
-// Sun (Directional Light)
-const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-sunLight.position.set(10, 10, 10); // Position it based on your sketch
-scene.add(sunLight);
+setupLighting(scene);
 
 // Controls for mouse interaction
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -34,5 +36,12 @@ function animate() {
     controls.update();
     renderer.render(scene, camera);
 }
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 animate();
