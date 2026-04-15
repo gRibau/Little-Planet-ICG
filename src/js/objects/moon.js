@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export function createMoon() {
-    const geometry = new THREE.SphereGeometry(5, 32, 32);
+    const geometry = new THREE.SphereGeometry(7, 32, 32);
     const material = new THREE.MeshStandardMaterial({ color: 0x888888 });
     const moon = new THREE.Mesh(geometry, material);
     

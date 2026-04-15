@@ -11,7 +11,7 @@ import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 const scene = new THREE.Scene();
 
 // Setup Environment
-setupStars(scene, 10000); // Adding 10,000 extra stars
+const starField = setupStars(scene, 10000); // Adding 10,000 extra stars
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -27,6 +27,7 @@ scene.add(planet);
 
 const sun = createSun();
 scene.add(sun);
+const sunOffset = sun.position.clone();
 
 const moon = createMoon();
 scene.add(moon);
@@ -35,13 +36,17 @@ setupLighting(scene);
 
 // Controls for mouse interaction
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.minDistance = 50;   // Minimum zoom distance (planet radius is 5)
+controls.minDistance = 50;   // Minimum zoom distance (planet radius is 25)
 controls.maxDistance = 300; // Maximum zoom distance
 camera.position.x = 100;
 
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+
+    // Keep background elements centered around the camera.
+    starField.position.copy(camera.position);
+    sun.position.copy(camera.position).add(sunOffset);
     
     // Call the external animation logic
     planetAndMoonAnimations(planet, moon);
