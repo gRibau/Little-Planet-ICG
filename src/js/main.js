@@ -36,6 +36,7 @@ setupLighting(scene);
 
 // Controls for mouse interaction
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enablePan = false; // Disable right-click camera translation
 controls.minDistance = 50;   // Minimum zoom distance (planet radius is 25)
 controls.maxDistance = 300; // Maximum zoom distance
 camera.position.x = 100;
