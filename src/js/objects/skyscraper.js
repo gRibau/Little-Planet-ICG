@@ -116,6 +116,17 @@ export function createSkyscraper() {
 
     skyscraper.userData.height = bodyHeight;
     skyscraper.userData.windows = windows;
+    skyscraper.userData.windowLighting = {
+        lightColor: 0x4f80ff,
+        lightEmissive: 0x163a92,
+        lightIntensity: 0.85,
+        darkColor: 0xffd45a,
+        darkEmissive: 0xffd04d,
+        darkIntensity: 1.0,
+        shadowThreshold: 0,
+        darkReach: 1 / 3,
+        transitionSpeed: 1.0
+    };
 
     skyscraper.traverse((part) => {
         if (part.isMesh) {

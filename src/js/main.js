@@ -9,6 +9,7 @@ import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 import { planeAnimations } from './animations/plane.js';
+import { updateModelsWindowLighting } from './animations/windowLighting.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
 
 // Scene setup
@@ -74,6 +75,11 @@ function animate() {
     
     // Call the external animation logic
     planetAndMoonAnimations(planet, moon);
+    updateModelsWindowLighting([skyscraper], planet, sun, {
+        deltaTime,
+        darkReach: 1 / 3,
+        transitionSpeed: 1.0
+    });
     planeInteraction.updateControls(deltaTime);
     planeAnimations(planet, plane, deltaTime);
     planeInteraction.updateCamera(deltaTime);
