@@ -29,7 +29,11 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         KeyW: false,
         KeyA: false,
         KeyS: false,
-        KeyD: false
+        KeyD: false,
+        ArrowUp: false,
+        ArrowDown: false,
+        ArrowLeft: false,
+        ArrowRight: false
     };
 
     let planeSelected = false;
@@ -50,7 +54,7 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
     controlsOverlay.style.lineHeight = '1.4';
     controlsOverlay.style.display = 'none';
     controlsOverlay.style.whiteSpace = 'pre-line';
-    controlsOverlay.textContent = 'Plane controls\nW: Faster\nS: Slower\nA: Turn left\nD: Turn right';
+    controlsOverlay.textContent = 'Plane controls\nW: Faster\nS: Slower\nA: Turn left\nD: Turn right\nUp: Dip\nDown: Rise\nLeft: Tilt left\nRight: Tilt right';
     document.body.appendChild(controlsOverlay);
 
     function clearKeyState() {
@@ -58,6 +62,10 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         keyState.KeyA = false;
         keyState.KeyS = false;
         keyState.KeyD = false;
+        keyState.ArrowUp = false;
+        keyState.ArrowDown = false;
+        keyState.ArrowLeft = false;
+        keyState.ArrowRight = false;
     }
 
     function setPlaneSelection(isSelected) {
@@ -151,8 +159,11 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
             return;
         }
 
-        planeForwardDir.set(1, 0, 0).applyQuaternion(plane.quaternion).normalize();
-        radialUpDir.copy(plane.position).sub(planet.position).normalize();
+        const anchorPosition = plane.userData.cameraAnchorPosition ?? plane.position;
+        const anchorQuaternion = plane.userData.cameraAnchorQuaternion ?? plane.quaternion;
+
+        planeForwardDir.set(1, 0, 0).applyQuaternion(anchorQuaternion).normalize();
+        radialUpDir.copy(anchorPosition).sub(planet.position).normalize();
 
         // Keep heading from plane but force camera up relative to planet to avoid roll-flips.
         projectedForward.copy(planeForwardDir)
@@ -172,8 +183,8 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         worldOffset
             .copy(projectedForward).multiplyScalar(-followDistance)
             .addScaledVector(cameraUpDir, followHeight);
-        cameraFollowTarget.copy(plane.position).add(worldOffset);
-        cameraLookAhead.copy(plane.position).addScaledVector(projectedForward, 12);
+        cameraFollowTarget.copy(anchorPosition).add(worldOffset);
+        cameraLookAhead.copy(anchorPosition).addScaledVector(projectedForward, 12);
 
         // Camera local +X/right, +Y/up, +Z/backward so that local -Z looks along plane forward.
         cameraBasis.makeBasis(cameraRightDir, cameraUpDir, cameraBackDir);
@@ -207,7 +218,11 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
                     accelerate: keyState.KeyW,
                     brake: keyState.KeyS,
                     turnLeft: keyState.KeyA,
-                    turnRight: keyState.KeyD
+                    turnRight: keyState.KeyD,
+                    dip: keyState.ArrowUp,
+                    rise: keyState.ArrowDown,
+                    tiltLeft: keyState.ArrowLeft,
+                    tiltRight: keyState.ArrowRight
                 },
                 deltaTime
             );

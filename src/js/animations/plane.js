@@ -2,11 +2,22 @@ import * as THREE from 'three';
 
 const planeOrbitRadius = 35;
 const defaultPlaneAngularSpeed = 0.7;
-const maxPlaneAngularSpeed = 2.4;
-const minPlaneAngularSpeed = 0.35;
-const planeSpeedBaseRate = 1.6;
-const planeSpeedRampRate = 2.2;
-const planeTurnRate = 1.9;
+const maxPlaneAngularSpeed = 1.2;
+const minPlaneAngularSpeed = 0.175;
+const planeSpeedBaseRate = 0.8;
+const planeSpeedRampRate = 1.1;
+const planeTurnRate = 1.15;
+
+const maxPlanePitchAngle = THREE.MathUtils.degToRad(14);
+const maxPlaneRollAngle = THREE.MathUtils.degToRad(26);
+const maxLateralOffset = 6;
+const maxVerticalOffset = 4;
+const lateralOffsetRate = 6;
+const verticalOffsetRate = 5;
+const pitchFromVerticalVelocity = 0.055;
+const rollFromLateralVelocity = 0.11;
+const tiltResponseSpeed = 4;
+const verticalVelocityTiltDeadzone = 0.05;
 
 let planeAngularSpeed = defaultPlaneAngularSpeed;
 let radialOut = new THREE.Vector3(1, 0, 0);
@@ -15,6 +26,32 @@ let planeStateInitialized = false;
 let speedInputDirection = 0;
 let speedInputHoldTime = 0;
 let lastAppliedSpeedRate = planeSpeedBaseRate;
+
+let laneOffsetRight = 0;
+let laneOffsetUp = 0;
+let targetLaneOffsetRight = 0;
+let targetLaneOffsetUp = 0;
+let planePitchVisualAngle = 0;
+let planeRollVisualAngle = 0;
+
+const orientedForward = new THREE.Vector3();
+const orientedUp = new THREE.Vector3();
+const orientedRight = new THREE.Vector3();
+const basePosition = new THREE.Vector3();
+const planeOffset = new THREE.Vector3();
+const velocityRight = new THREE.Vector3();
+const velocityUp = new THREE.Vector3();
+const cameraAnchorQuaternion = new THREE.Quaternion();
+const pitchQuaternion = new THREE.Quaternion();
+const rollQuaternion = new THREE.Quaternion();
+
+function moveToward(currentValue, targetValue, maxStep) {
+    if (Math.abs(targetValue - currentValue) <= maxStep) {
+        return targetValue;
+    }
+
+    return currentValue + Math.sign(targetValue - currentValue) * maxStep;
+}
 
 function initializePlaneState(planet, plane) {
     if (planeStateInitialized) {
@@ -43,6 +80,10 @@ export function updatePlaneControls(inputState, deltaTime) {
     const brake = inputState?.brake ?? false;
     const turnLeft = inputState?.turnLeft ?? false;
     const turnRight = inputState?.turnRight ?? false;
+    const dip = inputState?.dip ?? false;
+    const rise = inputState?.rise ?? false;
+    const tiltLeft = inputState?.tiltLeft ?? false;
+    const tiltRight = inputState?.tiltRight ?? false;
 
     const requestedSpeedDirection = (accelerate ? 1 : 0) - (brake ? 1 : 0);
 
@@ -82,6 +123,10 @@ export function updatePlaneControls(inputState, deltaTime) {
     if (turnInput !== 0) {
         planeForward.applyAxisAngle(radialOut, turnInput * planeTurnRate * deltaTime).normalize();
     }
+
+    // Up arrow dips and Down arrow rises, as requested.
+    targetLaneOffsetUp = ((rise ? 1 : 0) - (dip ? 1 : 0)) * maxVerticalOffset;
+    targetLaneOffsetRight = ((tiltRight ? 1 : 0) - (tiltLeft ? 1 : 0)) * maxLateralOffset;
 }
 
 export function resetPlaneSpeed() {
@@ -89,6 +134,13 @@ export function resetPlaneSpeed() {
     speedInputDirection = 0;
     speedInputHoldTime = 0;
     lastAppliedSpeedRate = planeSpeedBaseRate;
+
+    laneOffsetRight = 0;
+    laneOffsetUp = 0;
+    targetLaneOffsetRight = 0;
+    targetLaneOffsetUp = 0;
+    planePitchVisualAngle = 0;
+    planeRollVisualAngle = 0;
 }
 
 export function planeAnimations(planet, plane, deltaTime = 1 / 60) {
@@ -96,19 +148,62 @@ export function planeAnimations(planet, plane, deltaTime = 1 / 60) {
 
     const angularStep = planeAngularSpeed * deltaTime;
     radialOut.addScaledVector(planeForward, angularStep).normalize();
-
     planeForward.addScaledVector(radialOut, -planeForward.dot(radialOut)).normalize();
 
     const planeX = radialOut.x * planeOrbitRadius;
     const planeY = radialOut.y * planeOrbitRadius;
     const planeZ = radialOut.z * planeOrbitRadius;
 
-    const planeUp = radialOut;
-    const planeRight = new THREE.Vector3().crossVectors(planeForward, planeUp).normalize();
-    const planeOrientation = new THREE.Matrix4().makeBasis(planeForward, planeUp, planeRight);
+    const previousOffsetRight = laneOffsetRight;
+    const previousOffsetUp = laneOffsetUp;
 
-    plane.position.set(planet.position.x + planeX, planet.position.y + planeY, planet.position.z + planeZ);
+    const lateralT = 1 - Math.exp(-lateralOffsetRate * deltaTime);
+    const verticalT = 1 - Math.exp(-verticalOffsetRate * deltaTime);
+    laneOffsetRight = THREE.MathUtils.lerp(laneOffsetRight, targetLaneOffsetRight, lateralT);
+    laneOffsetUp = THREE.MathUtils.lerp(laneOffsetUp, targetLaneOffsetUp, verticalT);
+
+    const offsetRightVelocity = (laneOffsetRight - previousOffsetRight) / Math.max(deltaTime, 0.0001);
+    const offsetUpVelocity = (laneOffsetUp - previousOffsetUp) / Math.max(deltaTime, 0.0001);
+    const pitchVelocity = Math.abs(offsetUpVelocity) < verticalVelocityTiltDeadzone ? 0 : offsetUpVelocity;
+    const targetPitchAngle = THREE.MathUtils.clamp(pitchVelocity * pitchFromVerticalVelocity, -maxPlanePitchAngle, maxPlanePitchAngle);
+    const targetRollAngle = THREE.MathUtils.clamp(offsetRightVelocity * rollFromLateralVelocity, -maxPlaneRollAngle, maxPlaneRollAngle);
+    const tiltT = 1 - Math.exp(-tiltResponseSpeed * deltaTime);
+    planePitchVisualAngle = THREE.MathUtils.lerp(planePitchVisualAngle, targetPitchAngle, tiltT);
+    planeRollVisualAngle = THREE.MathUtils.lerp(planeRollVisualAngle, targetRollAngle, tiltT);
+
+    orientedForward.copy(planeForward);
+    orientedUp.copy(radialOut);
+    orientedRight.crossVectors(orientedForward, orientedUp).normalize();
+
+    pitchQuaternion.setFromAxisAngle(orientedRight, planePitchVisualAngle);
+    orientedForward.applyQuaternion(pitchQuaternion).normalize();
+    orientedUp.applyQuaternion(pitchQuaternion).normalize();
+    orientedRight.crossVectors(orientedForward, orientedUp).normalize();
+
+    rollQuaternion.setFromAxisAngle(orientedForward, planeRollVisualAngle);
+    orientedRight.applyQuaternion(rollQuaternion).normalize();
+    orientedUp.applyQuaternion(rollQuaternion).normalize();
+
+    const planeOrientation = new THREE.Matrix4().makeBasis(orientedForward, orientedUp, orientedRight);
+    cameraAnchorQuaternion.setFromRotationMatrix(planeOrientation);
+
+    basePosition.set(planet.position.x + planeX, planet.position.y + planeY, planet.position.z + planeZ);
+    velocityRight.copy(orientedRight).multiplyScalar(laneOffsetRight);
+    velocityUp.copy(orientedUp).multiplyScalar(laneOffsetUp);
+    planeOffset.copy(velocityRight).add(velocityUp);
+
+    plane.position.copy(basePosition).add(planeOffset);
     plane.quaternion.setFromRotationMatrix(planeOrientation);
+
+    if (!plane.userData.cameraAnchorPosition) {
+        plane.userData.cameraAnchorPosition = new THREE.Vector3();
+    }
+    if (!plane.userData.cameraAnchorQuaternion) {
+        plane.userData.cameraAnchorQuaternion = new THREE.Quaternion();
+    }
+
+    plane.userData.cameraAnchorPosition.copy(basePosition);
+    plane.userData.cameraAnchorQuaternion.copy(cameraAnchorQuaternion);
 
     if (plane.userData.propeller) {
         plane.userData.propeller.rotation.x += 0.25 + planeAngularSpeed * 0.2;
