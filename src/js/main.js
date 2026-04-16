@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createPlanet } from './objects/planet.js';
+import { createPlanet, placeModelOnPlanet } from './objects/planet.js';
 import { createSun } from './objects/sun.js';
 import { createMoon } from './objects/moon.js';
 import { createPropellerPlane } from './objects/propellerPlane.js';
+import { createSkyscraper } from './objects/skyscraper.js';
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
@@ -27,6 +28,17 @@ document.body.appendChild(renderer.domElement);
 // Initialize Components
 const planet = createPlanet();
 scene.add(planet);
+
+const skyscraper = createSkyscraper();
+skyscraper.scale.setScalar(0.7);
+// Approximate center of the largest green/yellow continent region.
+placeModelOnPlanet(skyscraper, planet, {
+    latitudeDeg: -40,
+    longitudeDeg: -30,
+    radius: 25,
+    altitude: 1.5,
+    yawDeg: 25
+});
 
 const sun = createSun();
 scene.add(sun);
