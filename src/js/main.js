@@ -34,10 +34,10 @@ const skyscraper = createSkyscraper();
 skyscraper.scale.setScalar(0.7);
 // Approximate center of the largest green/yellow continent region.
 placeModelOnPlanet(skyscraper, planet, {
-    latitudeDeg: -40,
-    longitudeDeg: -30,
+    latitudeDeg: 15,
+    longitudeDeg: 120,
     radius: 25,
-    altitude: 1.5,
+    altitude: 1.1,
     yawDeg: 25
 });
 
