@@ -7,8 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // Import the model for testing here, for example:
 // import { Satellite } from './vehicles.js'; 
-import { createPropellerPlane } from './objects/propellerPlane.js';
-import { createSkyscraper } from './objects/skyscraper.js';
+import { createCity } from './objects/city.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222); // Dark grey background
@@ -31,7 +30,7 @@ directionalLight.position.set(10, 20, 10);
 scene.add(directionalLight);
 
 // A helper grid for the floor
-const gridHelper = new THREE.GridHelper(50, 50);
+const gridHelper = new THREE.GridHelper(60, 60);
 scene.add(gridHelper);
 
 // Add models here to test
@@ -44,9 +43,13 @@ scene.add(gridHelper);
 // scene.add(plane);
 
 // Skyscraper
-const skyscraper = createSkyscraper();
-skyscraper.position.set(0, 0, 0);
-scene.add(skyscraper);
+// const skyscraper = createSkyscraper();
+// skyscraper.position.set(0, 0, 0);
+// scene.add(skyscraper);
+
+// City
+const city = createCity();
+scene.add(city);
 
 function animate() {
     requestAnimationFrame(animate);

@@ -4,7 +4,7 @@ import { createPlanet, placeModelOnPlanet } from './objects/planet.js';
 import { createSun } from './objects/sun.js';
 import { createMoon } from './objects/moon.js';
 import { createPropellerPlane } from './objects/propellerPlane.js';
-import { createSkyscraper } from './objects/skyscraper.js';
+import { createCity } from './objects/city.js';
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
@@ -30,16 +30,15 @@ document.body.appendChild(renderer.domElement);
 const planet = createPlanet();
 scene.add(planet);
 
-const skyscraper = createSkyscraper();
-skyscraper.scale.setScalar(0.7);
-// Approximate center of the largest green/yellow continent region.
-placeModelOnPlanet(skyscraper, planet, {
-    latitudeDeg: 15,
-    longitudeDeg: 120,
+const city = createCity();
+placeModelOnPlanet(city, planet, {
+    latitudeDeg: 2,
+    longitudeDeg: 115,
     radius: 25,
-    altitude: 1.1,
+    altitude: 0,
     yawDeg: 25
 });
+const cityBuildings = city.userData.buildings ?? [];
 
 const sun = createSun();
 scene.add(sun);
@@ -75,7 +74,7 @@ function animate() {
     
     // Call the external animation logic
     planetAndMoonAnimations(planet, moon);
-    updateModelsWindowLighting([skyscraper], planet, sun, {
+    updateModelsWindowLighting(cityBuildings, planet, sun, {
         deltaTime,
         darkReach: 1 / 3,
         transitionSpeed: 1.0
