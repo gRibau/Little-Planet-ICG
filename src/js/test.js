@@ -8,6 +8,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // Import the model for testing here, for example:
 // import { Satellite } from './vehicles.js'; 
 import { createCity } from './objects/city.js';
+import { createVolcano } from './objects/volcano.js';
+import { createPyramid } from './objects/pyramid.js';
+import { createTree } from './objects/tree.js';
+import { createPalmTree } from './objects/palmTree.js';
+import { createCargoShip } from './objects/cargoShip.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222); // Dark grey background
@@ -48,8 +53,28 @@ scene.add(gridHelper);
 // scene.add(skyscraper);
 
 // City
-const city = createCity();
-scene.add(city);
+// const city = createCity();
+// scene.add(city);
+
+// Volcano
+// const volcano = createVolcano();
+// scene.add(volcano);
+
+// Pyramid
+// const pyramid = createPyramid();
+// scene.add(pyramid);
+
+// Tree
+// const tree = createTree();
+// scene.add(tree);
+
+// Palm tree
+// const palmTree = createPalmTree();
+// scene.add(palmTree);
+
+// Cargo ship
+const cargoShip = createCargoShip();
+scene.add(cargoShip);
 
 function animate() {
     requestAnimationFrame(animate);

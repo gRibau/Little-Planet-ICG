@@ -5,6 +5,11 @@ import { createSun } from './objects/sun.js';
 import { createMoon } from './objects/moon.js';
 import { createPropellerPlane } from './objects/propellerPlane.js';
 import { createCity } from './objects/city.js';
+import { createVolcano } from './objects/volcano.js';
+import { createPyramid } from './objects/pyramid.js';
+import { createTree } from './objects/tree.js';
+import { createPalmTree } from './objects/palmTree.js';
+import { createCargoShip } from './objects/cargoShip.js';
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
@@ -30,7 +35,9 @@ document.body.appendChild(renderer.domElement);
 const planet = createPlanet();
 scene.add(planet);
 
+// Objects on planet
 const city = createCity();
+city.scale.setScalar(0.75);
 placeModelOnPlanet(city, planet, {
     latitudeDeg: 2,
     longitudeDeg: 115,
@@ -39,6 +46,65 @@ placeModelOnPlanet(city, planet, {
     yawDeg: 25
 });
 const cityBuildings = city.userData.buildings ?? [];
+
+const volcano = createVolcano();
+placeModelOnPlanet(volcano, planet, {
+    latitudeDeg: 27,
+    longitudeDeg: 220,
+    radius: 25,
+    altitude: 0.8,
+    yawDeg: -15
+});
+
+const pyramid1 = createPyramid();
+pyramid1.scale.setScalar(0.75);
+placeModelOnPlanet(pyramid1, planet, {
+    latitudeDeg: -10,
+    longitudeDeg: 0,
+    radius: 25,
+    altitude: 0.75,
+    yawDeg: 35
+});
+
+const pyramid2 = createPyramid();
+pyramid2.scale.setScalar(0.55);
+placeModelOnPlanet(pyramid2, planet, {
+    latitudeDeg: -20,
+    longitudeDeg: 10,
+    radius: 25,
+    altitude: 0.8,
+    yawDeg: 35
+});
+
+const tree = createTree();
+tree.scale.setScalar(1.5);
+placeModelOnPlanet(tree, planet, {
+    latitudeDeg: 17,
+    longitudeDeg: 130,
+    radius: 25,
+    altitude: 0.8,
+    yawDeg: -10
+});
+
+const palmTree = createPalmTree();
+palmTree.scale.setScalar(0.8);
+placeModelOnPlanet(palmTree, planet, {
+    latitudeDeg: 10,
+    longitudeDeg: -150,
+    radius: 25,
+    altitude: 0.6,
+    yawDeg: 20
+});
+
+const cargoShip = createCargoShip();
+cargoShip.scale.setScalar(0.6);
+placeModelOnPlanet(cargoShip, planet, {
+    latitudeDeg: -5,
+    longitudeDeg: 160,
+    radius: 25,
+    altitude: 0.2,
+    yawDeg: -40
+});
 
 const sun = createSun();
 scene.add(sun);
