@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createPlanet, placeModelOnPlanet } from './objects/planet.js';
 import { createSun } from './objects/sun.js';
-import { createMoon } from './objects/moon.js';
+import { createMoon, placeModelOnMoon } from './objects/moon.js';
+import { createUFO } from './objects/ufo.js';
+// import { createSatellite } from './objects/satellite.js';
 import { createPropellerPlane } from './objects/propellerPlane.js';
 import { createCity } from './objects/city.js';
 import { createVolcano } from './objects/volcano.js';
@@ -10,12 +12,14 @@ import { createPyramid } from './objects/pyramid.js';
 import { createTree } from './objects/tree.js';
 import { createPalmTree } from './objects/palmTree.js';
 import { createCargoShip } from './objects/cargoShip.js';
+import { createCow } from './objects/cow.js';
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 import { planeAnimations } from './animations/plane.js';
 import { updateModelsWindowLighting } from './animations/windowLighting.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -106,12 +110,39 @@ placeModelOnPlanet(cargoShip, planet, {
     yawDeg: -40
 });
 
+const cow = createCow();
+cow.scale.setScalar(0.5);
+placeModelOnPlanet(cow, planet, {
+    latitudeDeg: 20,
+    longitudeDeg: 140,
+    radius: 25,
+    altitude: 0.5,
+    yawDeg: 45
+});
+
 const sun = createSun();
 scene.add(sun);
 const sunOffset = sun.position.clone();
 
 const moon = createMoon();
 scene.add(moon);
+
+// Create a UFO and place it on the moon's far side (away from the planet)
+const ufo = createUFO();
+// scale UFO down a bit to look appropriate on the moon
+ufo.scale.setScalar(0.9);
+placeModelOnMoon(ufo, moon, {
+    latitudeDeg: 0,
+    longitudeDeg: 180,
+    radius: 7,
+    altitude: 0.5,
+    yawDeg: 0,
+    alignToNormal: true
+});
+
+// const satellite = createSatellite();
+// satellite.scale.setScalar(0.8);
+// scene.add(satellite);
 
 const plane = createPropellerPlane();
 plane.scale.setScalar(0.7);
@@ -137,9 +168,9 @@ function animate() {
     // Keep background elements centered around the camera.
     starField.position.copy(camera.position);
     sun.position.copy(camera.position).add(sunOffset);
-    
+
     // Call the external animation logic
-    planetAndMoonAnimations(planet, moon);
+    planetAndMoonAnimations(planet, moon, null); // satellite commented out
     updateModelsWindowLighting(cityBuildings, planet, sun, {
         deltaTime,
         darkReach: 1 / 3,
@@ -148,7 +179,7 @@ function animate() {
     planeInteraction.updateControls(deltaTime);
     planeAnimations(planet, plane, deltaTime);
     planeInteraction.updateCamera(deltaTime);
-    
+
     if (controls.enabled) {
         controls.update();
     }

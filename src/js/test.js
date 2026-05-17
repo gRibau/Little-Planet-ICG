@@ -12,7 +12,12 @@ import { createVolcano } from './objects/volcano.js';
 import { createPyramid } from './objects/pyramid.js';
 import { createTree } from './objects/tree.js';
 import { createPalmTree } from './objects/palmTree.js';
-import { createCargoShip } from './objects/cargoShip.js';
+import { createHut } from './objects/hut.js';
+import { createHouse } from './objects/house.js';
+// import { createCargoShip } from './objects/cargoShip.js';
+// import { createSatellite } from './objects/satellite.js';
+// import { createUFO } from './objects/ufo.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222); // Dark grey background
@@ -73,8 +78,44 @@ scene.add(gridHelper);
 // scene.add(palmTree);
 
 // Cargo ship
-const cargoShip = createCargoShip();
-scene.add(cargoShip);
+// Cargo ship
+// const cargoShip = createCargoShip();
+// scene.add(cargoShip);
+
+// Cow (GLB) — commented out for hut tweaking
+// const gltfLoader = new GLTFLoader();
+// gltfLoader.load(
+//     new URL('../assets/models/Cow.glb', import.meta.url).href,
+//     (gltf) => {
+//         const model = gltf.scene;
+//         model.traverse((n) => {
+//             if (n.isMesh) {
+//                 n.castShadow = true;
+//                 n.receiveShadow = true;
+//                 if (n.material) n.material.needsUpdate = true;
+//             }
+//         });
+//         model.scale.setScalar(1.0);
+//         model.position.set(0, 0, 0);
+//         scene.add(model);
+//     },
+//     undefined,
+//     (err) => {
+//         console.error('Failed to load Cow.glb', err);
+//     }
+// );
+
+// Hut — commented out for house tweaking
+// const hut = createHut();
+// hut.scale.setScalar(1.0);
+// hut.position.set(0, 0, 0);
+// scene.add(hut);
+
+// House
+const house = createHouse();
+house.scale.setScalar(1.0);
+house.position.set(0, 0, 0);
+scene.add(house);
 
 function animate() {
     requestAnimationFrame(animate);
