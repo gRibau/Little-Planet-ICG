@@ -4,7 +4,7 @@ import { createPlanet, placeModelOnPlanet } from './objects/planet.js';
 import { createSun } from './objects/sun.js';
 import { createMoon, placeModelOnMoon } from './objects/moon.js';
 import { createUFO } from './objects/ufo.js';
-// import { createSatellite } from './objects/satellite.js';
+import { createSatellite } from './objects/satellite.js';
 import { createPropellerPlane } from './objects/propellerPlane.js';
 import { createCity } from './objects/city.js';
 import { createVolcano } from './objects/volcano.js';
@@ -140,9 +140,9 @@ placeModelOnMoon(ufo, moon, {
     alignToNormal: true
 });
 
-// const satellite = createSatellite();
-// satellite.scale.setScalar(0.8);
-// scene.add(satellite);
+const satellite = createSatellite();
+satellite.scale.setScalar(1.8);
+scene.add(satellite);
 
 const plane = createPropellerPlane();
 plane.scale.setScalar(0.7);
@@ -170,7 +170,7 @@ function animate() {
     sun.position.copy(camera.position).add(sunOffset);
 
     // Call the external animation logic
-    planetAndMoonAnimations(planet, moon, null); // satellite commented out
+    planetAndMoonAnimations(planet, moon, satellite);
     updateModelsWindowLighting(cityBuildings, planet, sun, {
         deltaTime,
         darkReach: 1 / 3,

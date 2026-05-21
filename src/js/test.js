@@ -14,7 +14,8 @@ import { createTree } from './objects/tree.js';
 import { createPalmTree } from './objects/palmTree.js';
 import { createHut } from './objects/hut.js';
 import { createHouse } from './objects/house.js';
-// import { createCargoShip } from './objects/cargoShip.js';
+import { createCargoShip } from './objects/cargoShip.js';
+import { createBlackHole } from './objects/blackHole.js';
 // import { createSatellite } from './objects/satellite.js';
 // import { createUFO } from './objects/ufo.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -78,7 +79,6 @@ scene.add(gridHelper);
 // scene.add(palmTree);
 
 // Cargo ship
-// Cargo ship
 // const cargoShip = createCargoShip();
 // scene.add(cargoShip);
 
@@ -111,11 +111,17 @@ scene.add(gridHelper);
 // hut.position.set(0, 0, 0);
 // scene.add(hut);
 
+// Black hole
+const blackHole = createBlackHole();
+blackHole.scale.setScalar(1.0);
+blackHole.position.set(0, 0, 0);
+scene.add(blackHole);
+
 // House
-const house = createHouse();
-house.scale.setScalar(1.0);
-house.position.set(0, 0, 0);
-scene.add(house);
+// const house = createHouse();
+// house.scale.setScalar(1.0);
+// house.position.set(0, 0, 0);
+// scene.add(house);
 
 function animate() {
     requestAnimationFrame(animate);
