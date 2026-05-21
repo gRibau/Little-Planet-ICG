@@ -72,21 +72,21 @@ export function createBlackHole() {
     core.renderOrder = 1;
     blackHole.add(core);
 
-    const innerRing = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.8, 24, 96), innerRingMaterial);
+    const innerRing = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.6, 24, 96), innerRingMaterial);
     innerRing.scale.z = 0.1;
     innerRing.rotation.x = Math.PI / 2;
     innerRing.rotation.z = Math.PI * 0.08;
     innerRing.renderOrder = 1;
     blackHole.add(innerRing);
 
-    const halo = new THREE.Mesh(new THREE.TorusGeometry(4, 0.8, 24, 96), haloRingMaterial);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(3.3, 0.5, 24, 96), haloRingMaterial);
     halo.scale.z = 0.1;
     halo.rotation.x = Math.PI / 2;
     halo.rotation.z = Math.PI * 0.08;
     halo.renderOrder = 1;
     blackHole.add(halo); 
 
-    const outerRing = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.8, 24, 96), outerRingMaterial);
+    const outerRing = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.4, 24, 96), outerRingMaterial);
     outerRing.scale.z = 0.1;
     outerRing.rotation.x = Math.PI / 2;
     outerRing.rotation.z = Math.PI * 0.08;
