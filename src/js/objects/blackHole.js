@@ -4,8 +4,8 @@ export function createBlackHole() {
     const blackHole = new THREE.Group();
 
     // 1. Core Material
-    const singularityMaterial = new THREE.MeshStandardMaterial({
-        color: 0x050505,
+    const coreMaterial = new THREE.MeshStandardMaterial({
+        color: 0x000000,
         roughness: 1,
         metalness: 0,
         transparent: true,
@@ -18,14 +18,14 @@ export function createBlackHole() {
     });
 
     // 2. Sphere Materials
-    const accretionSphereMaterial = new THREE.MeshStandardMaterial({
+    const outerSphereMaterial = new THREE.MeshStandardMaterial({
         color: 0xff8a1f,
         emissive: 0xff4f00,
         emissiveIntensity: 1.4,
         roughness: 0.55,
         metalness: 0.15,
         transparent: true,
-        opacity: 0.72,
+        opacity: 1,
         depthTest: false,
         depthWrite: false,
         stencilWrite: true,
@@ -33,10 +33,13 @@ export function createBlackHole() {
         stencilFunc: THREE.NotEqualStencilFunc
     });
 
-    const glowSphereMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffc06b,
+    const haloSphereMaterial = outerSphereMaterial.clone();
+    haloSphereMaterial.color.set(0xFFD487);
+
+    const innerSphereMaterial = new THREE.MeshBasicMaterial({
+        color: 0xFFE1AB,
         transparent: true,
-        opacity: 0.45,
+        opacity: 1,
         side: THREE.DoubleSide,
         depthTest: false,
         depthWrite: false,
@@ -46,54 +49,60 @@ export function createBlackHole() {
     });
 
     // 3. Ring Materials
-    // Fix: depthWrite is false so they do not block each other
-    // They still write to the stencil buffer to mask the background
-    const accretionRingMaterial = accretionSphereMaterial.clone();
-    accretionRingMaterial.depthTest = true;
-    accretionRingMaterial.depthWrite = false; 
-    accretionRingMaterial.stencilFunc = THREE.AlwaysStencilFunc; 
-    accretionRingMaterial.stencilZPass = THREE.ReplaceStencilOp;
+    const outerRingMaterial = outerSphereMaterial.clone();
+    outerRingMaterial.depthTest = true;
+    outerRingMaterial.depthWrite = false; 
+    outerRingMaterial.stencilFunc = THREE.AlwaysStencilFunc; 
+    outerRingMaterial.stencilZPass = THREE.ReplaceStencilOp;
 
-    const glowRingMaterial = glowSphereMaterial.clone();
-    glowRingMaterial.depthTest = true;
-    glowRingMaterial.depthWrite = false;
-    glowRingMaterial.stencilFunc = THREE.AlwaysStencilFunc;
-    glowRingMaterial.stencilZPass = THREE.ReplaceStencilOp;
+    const haloRingMaterial = haloSphereMaterial.clone();
+    haloRingMaterial.depthTest = true;
+    haloRingMaterial.depthWrite = false; 
+    haloRingMaterial.stencilFunc = THREE.AlwaysStencilFunc; 
+    haloRingMaterial.stencilZPass = THREE.ReplaceStencilOp;
+
+    const innerRingMaterial = innerSphereMaterial.clone();
+    innerRingMaterial.depthTest = true;
+    innerRingMaterial.depthWrite = false;
+    innerRingMaterial.stencilFunc = THREE.AlwaysStencilFunc;
+    innerRingMaterial.stencilZPass = THREE.ReplaceStencilOp;
 
     // Foreground rendering
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1.6, 48, 48), singularityMaterial);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(1.6, 48, 48), coreMaterial);
     core.renderOrder = 1;
     blackHole.add(core);
 
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(3.55, 48, 48), glowRingMaterial);
-    halo.scale.set(1.15, 0.05, 1.15);
-    halo.renderOrder = 1;
-    blackHole.add(halo); 
-
-    const innerRing = new THREE.Mesh(new THREE.TorusGeometry(2.07, 0.47, 24, 120), glowRingMaterial);
-    innerRing.scale.z = 0.3;
+    const innerRing = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.8, 24, 96), innerRingMaterial);
+    innerRing.scale.z = 0.1;
     innerRing.rotation.x = Math.PI / 2;
     innerRing.rotation.z = Math.PI * 0.08;
     innerRing.renderOrder = 1;
     blackHole.add(innerRing);
 
-    const outerRing = new THREE.Mesh(new THREE.TorusGeometry(3.75, 0.34, 24, 96), accretionRingMaterial);
-    outerRing.scale.z = 0.3;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(4, 0.8, 24, 96), haloRingMaterial);
+    halo.scale.z = 0.1;
+    halo.rotation.x = Math.PI / 2;
+    halo.rotation.z = Math.PI * 0.08;
+    halo.renderOrder = 1;
+    blackHole.add(halo); 
+
+    const outerRing = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.8, 24, 96), outerRingMaterial);
+    outerRing.scale.z = 0.1;
     outerRing.rotation.x = Math.PI / 2;
-    outerRing.rotation.z = Math.PI * 0.12;
+    outerRing.rotation.z = Math.PI * 0.08;
     outerRing.renderOrder = 1;
     blackHole.add(outerRing);
 
     // Background rendering
-    const outerSphere = new THREE.Mesh(new THREE.SphereGeometry(1.9, 48, 48), accretionSphereMaterial);
+    const outerSphere = new THREE.Mesh(new THREE.SphereGeometry(1.9, 48, 48), outerSphereMaterial);
     outerSphere.renderOrder = 2;
     blackHole.add(outerSphere);
 
-    const haloSphere = new THREE.Mesh(new THREE.SphereGeometry(1.8, 48, 48), glowSphereMaterial);
+    const haloSphere = new THREE.Mesh(new THREE.SphereGeometry(1.8, 48, 48), haloSphereMaterial);
     haloSphere.renderOrder = 3;
     blackHole.add(haloSphere);
 
-    const innerSphere = new THREE.Mesh(new THREE.SphereGeometry(1.7, 48, 48), glowSphereMaterial);
+    const innerSphere = new THREE.Mesh(new THREE.SphereGeometry(1.7, 48, 48), innerSphereMaterial);
     innerSphere.renderOrder = 4;
     blackHole.add(innerSphere);
 
