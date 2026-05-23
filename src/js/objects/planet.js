@@ -40,8 +40,8 @@ export function placeModelOnPlanet(model, planet, options = {}) {
 
 export function createPlanet() {
     const textureLoader = new THREE.TextureLoader();
-    const colorMap = textureLoader.load(new URL('../../assets/textures/planet_texture_v3.png', import.meta.url).href);
-    const heightMap = textureLoader.load(new URL('../../assets/textures/planet_height_map_v6.png', import.meta.url).href);
+    const colorMap = textureLoader.load(new URL('../../assets/textures/planet_texture.png', import.meta.url).href);
+    const heightMap = textureLoader.load(new URL('../../assets/textures/planet_height_map.png', import.meta.url).href);
 
     colorMap.colorSpace = THREE.SRGBColorSpace;
     colorMap.minFilter = THREE.LinearMipmapLinearFilter;
@@ -61,7 +61,7 @@ export function createPlanet() {
         displacementBias: -0.5
     });
     const planet = new THREE.Mesh(geometry, material);
-    
-    
+
+
     return planet;
 }
