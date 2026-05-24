@@ -62,6 +62,8 @@ export function createPlanet() {
     });
     const planet = new THREE.Mesh(geometry, material);
 
+    planet.castShadow = true;
+    planet.receiveShadow = true;
 
     return planet;
 }

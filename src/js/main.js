@@ -13,13 +13,20 @@ import { createTree } from './objects/tree.js';
 import { createPalmTree } from './objects/palmTree.js';
 import { createCargoShip } from './objects/cargoShip.js';
 import { createCow } from './objects/cow.js';
+import { createSettlement } from './objects/settlement.js';
+
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 import { planeAnimations } from './animations/plane.js';
 import { updateModelsWindowLighting } from './animations/windowLighting.js';
+import { cargoShipAnimations } from './animations/cargoShip.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+
+// ================================================================
+// Initial Setup
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -35,18 +42,34 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Initialize Components
+
+// ================================================================
+// Astral Bodies
+
+// Initialize Planet
 const planet = createPlanet();
 scene.add(planet);
 
+const sun = createSun();
+scene.add(sun);
+const sunOffset = sun.position.clone();
+
+const moon = createMoon();
+scene.add(moon);
+
+
+// =============================================
 // Objects on planet
+
+// =======================
+// Main Models
 const city = createCity();
 city.scale.setScalar(0.75);
 placeModelOnPlanet(city, planet, {
     latitudeDeg: 2,
     longitudeDeg: 115,
     radius: 25,
-    altitude: 0,
+    altitude: -0.7,
     yawDeg: 25
 });
 const cityBuildings = city.userData.buildings ?? [];
@@ -56,7 +79,7 @@ placeModelOnPlanet(volcano, planet, {
     latitudeDeg: 27,
     longitudeDeg: 220,
     radius: 25,
-    altitude: 0.8,
+    altitude: 0.2,
     yawDeg: -15
 });
 
@@ -66,7 +89,7 @@ placeModelOnPlanet(pyramid1, planet, {
     latitudeDeg: -10,
     longitudeDeg: 0,
     radius: 25,
-    altitude: 0.75,
+    altitude: 0.2,
     yawDeg: 35
 });
 
@@ -76,9 +99,41 @@ placeModelOnPlanet(pyramid2, planet, {
     latitudeDeg: -20,
     longitudeDeg: 10,
     radius: 25,
-    altitude: 0.8,
+    altitude: 0.2,
     yawDeg: 35
 });
+
+const cargoShip = createCargoShip();
+cargoShip.scale.setScalar(0.6);
+scene.add(cargoShip);
+
+const cow = createCow();
+cow.scale.setScalar(0.5);
+placeModelOnPlanet(cow, planet, {
+    latitudeDeg: -35,
+    longitudeDeg: -35,
+    radius: 25,
+    altitude: 0.5,
+    yawDeg: 45
+});
+
+const settlement = createSettlement();
+settlement.scale.setScalar(0.7);
+placeModelOnPlanet(settlement, planet, {
+    latitudeDeg: 10,
+    longitudeDeg: -152,
+    radius: 25,
+    altitude: 0.3,
+    yawDeg: 130
+});
+
+
+const plane = createPropellerPlane();
+plane.scale.setScalar(0.7);
+scene.add(plane);
+
+// =======================
+// Trees
 
 const tree = createTree();
 tree.scale.setScalar(1.5);
@@ -91,45 +146,41 @@ placeModelOnPlanet(tree, planet, {
 });
 
 const palmTree = createPalmTree();
-palmTree.scale.setScalar(0.8);
+palmTree.scale.setScalar(0.6);
 placeModelOnPlanet(palmTree, planet, {
-    latitudeDeg: 10,
-    longitudeDeg: -150,
+    latitudeDeg: 12,
+    longitudeDeg: -140,
     radius: 25,
-    altitude: 0.6,
+    altitude: 0.4,
     yawDeg: 20
 });
 
-const cargoShip = createCargoShip();
-cargoShip.scale.setScalar(0.6);
-placeModelOnPlanet(cargoShip, planet, {
-    latitudeDeg: -5,
-    longitudeDeg: 160,
+const palmTree2 = createPalmTree();
+palmTree2.scale.setScalar(0.6);
+placeModelOnPlanet(palmTree2, planet, {
+    latitudeDeg: 45,
+    longitudeDeg: -130,
     radius: 25,
     altitude: 0.2,
-    yawDeg: -40
+    yawDeg: -15
 });
 
-const cow = createCow();
-cow.scale.setScalar(0.5);
-placeModelOnPlanet(cow, planet, {
-    latitudeDeg: 20,
-    longitudeDeg: 140,
+const palmTree3 = createPalmTree();
+palmTree3.scale.setScalar(0.6);
+placeModelOnPlanet(palmTree3, planet, {
+    latitudeDeg: 30,
+    longitudeDeg: -160,
     radius: 25,
-    altitude: 0.5,
+    altitude: 0.2,
     yawDeg: 45
 });
 
-const sun = createSun();
-scene.add(sun);
-const sunOffset = sun.position.clone();
 
-const moon = createMoon();
-scene.add(moon);
+// =============================================
+// Objects on moon
 
-// Create a UFO and place it on the moon's far side (away from the planet)
+// Create a UFO and place it on the moon back side
 const ufo = createUFO();
-// scale UFO down a bit to look appropriate on the moon
 ufo.scale.setScalar(0.9);
 placeModelOnMoon(ufo, moon, {
     latitudeDeg: 0,
@@ -144,9 +195,9 @@ const satellite = createSatellite();
 satellite.scale.setScalar(1.8);
 scene.add(satellite);
 
-const plane = createPropellerPlane();
-plane.scale.setScalar(0.7);
-scene.add(plane);
+
+// ================================================================
+// Final Setup
 
 setupLighting(scene);
 
@@ -160,7 +211,10 @@ camera.position.x = 150;
 const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane);
 const clock = new THREE.Clock();
 
+
+// =============================================
 // Animation loop
+
 function animate() {
     requestAnimationFrame(animate);
     const deltaTime = Math.min(clock.getDelta(), 0.05);
@@ -178,6 +232,7 @@ function animate() {
     });
     planeInteraction.updateControls(deltaTime);
     planeAnimations(planet, plane, deltaTime);
+    cargoShipAnimations(cargoShip, planet, deltaTime);
     planeInteraction.updateCamera(deltaTime);
 
     if (controls.enabled) {
@@ -186,11 +241,18 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+
+// =============================================
 // Handle window resize
+
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+// =======================
+// Run animate loop
 
 animate();
