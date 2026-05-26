@@ -16,6 +16,8 @@ import { createHut } from './objects/hut.js';
 import { createHouse } from './objects/house.js';
 import { createCargoShip } from './objects/cargoShip.js';
 import { createBlackHole } from './objects/blackHole.js';
+import { createForest } from './objects/forest.js';
+import { createNeighborhood } from './objects/neighborhood.js';
 // import { createSatellite } from './objects/satellite.js';
 // import { createUFO } from './objects/ufo.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -112,10 +114,20 @@ scene.add(gridHelper);
 // scene.add(hut);
 
 // Black hole
-const blackHole = createBlackHole();
-blackHole.scale.setScalar(1.0);
-blackHole.position.set(0, 0, 0);
-scene.add(blackHole);
+// const blackHole = createBlackHole();
+// blackHole.scale.setScalar(1.0);
+// blackHole.position.set(0, 0, 0);
+// scene.add(blackHole);
+
+// Forest
+// const forest = createForest();
+// forest.position.set(0, 0, 0);
+// scene.add(forest);
+
+// Neighborhood
+const neighborhood = createNeighborhood();
+neighborhood.position.set(0, 0, 0);
+scene.add(neighborhood);
 
 // House
 // const house = createHouse();

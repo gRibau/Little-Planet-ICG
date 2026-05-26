@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 
-export function createHouse() {
+export function createHouse(wallColor = 0x4a6278) {
     const house = new THREE.Group();
+    const windows = [];
 
-    // ── Dark-washed-blue palette ──────────────────────────────────────────────
-    const wallMat    = new THREE.MeshStandardMaterial({ color: 0x4a6278, roughness: 0.88 });
+    // ── Palette ──────────────────────────────────────────────
+    const wallMat    = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.88 });
     const trimMat    = new THREE.MeshStandardMaterial({ color: 0xd5e2ec, roughness: 0.60 });
     const roofMat    = new THREE.MeshStandardMaterial({ color: 0x1a2535, roughness: 0.92, side: THREE.DoubleSide });
     const roofTrim   = new THREE.MeshStandardMaterial({ color: 0x121e2c, roughness: 0.92 });
@@ -116,7 +117,7 @@ export function createHouse() {
     box(doorW*0.54, doorH*0.33, fT*0.5, panelMat, 0, gY+doorH*0.28, fZ+0.03);
     // transom window above door (single clean glass pane)
     { const tr = new THREE.Mesh(new THREE.PlaneGeometry(doorW-0.1, 0.30), glassMat);
-      tr.position.set(0, gY+doorH+0.19, fZ+0.01); house.add(tr);
+      tr.position.set(0, gY+doorH+0.19, fZ+0.01); house.add(tr); windows.push(tr);
       // transom frame
       box(doorW+fT*2, fT, fT, trimMat, 0, gY+doorH+fT/2,    fZ+0.02);
       box(doorW+fT*2, fT, fT, trimMat, 0, gY+doorH+0.36,    fZ+0.02); }
@@ -134,6 +135,7 @@ export function createHouse() {
         // glass pane
         const glass = new THREE.Mesh(new THREE.PlaneGeometry(winW-0.1, winH-0.06), glassMat);
         glass.position.z = 0.01; g.add(glass);
+        windows.push(glass);
 
         // frame bars (local Z)
         const ft = 0.06;
@@ -269,6 +271,19 @@ export function createHouse() {
 
     // ── Shadows ───────────────────────────────────────────────────────────────
     house.traverse(p => { if (p.isMesh) { p.castShadow = true; p.receiveShadow = true; } });
+
+    house.userData.windows = windows;
+    house.userData.windowLighting = {
+        lightColor: 0x7aaddd,
+        lightEmissive: 0x1a3355,
+        lightIntensity: 0.5,
+        darkColor: 0xffd45a,
+        darkEmissive: 0xffd04d,
+        darkIntensity: 1.0,
+        shadowThreshold: 0,
+        darkReach: 1 / 3,
+        transitionSpeed: 1.0
+    };
 
     return house;
 }

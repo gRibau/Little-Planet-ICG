@@ -29,6 +29,8 @@ export function updateModelWindowLighting(model, planet, sun, options = {}) {
         shadowThreshold = defaults.shadowThreshold ?? 0,
         darkReach = defaults.darkReach ?? 1 / 3,
         transitionSpeed = defaults.transitionSpeed ?? 1.2,
+        lightOpacity = defaults.lightOpacity ?? undefined,
+        darkOpacity = defaults.darkOpacity ?? undefined,
         deltaTime = options.deltaTime ?? 1 / 60
     } = options;
 
@@ -59,14 +61,24 @@ export function updateModelWindowLighting(model, planet, sun, options = {}) {
     _currentEmissive.lerpColors(_lightEmissive, _darkEmissive, lightingState.blend);
 
     const targetIntensity = THREE.MathUtils.lerp(lightIntensity, darkIntensity, lightingState.blend);
+    const hasOpacity = lightOpacity !== undefined && darkOpacity !== undefined;
+    const targetOpacity = hasOpacity ? THREE.MathUtils.lerp(lightOpacity, darkOpacity, lightingState.blend) : undefined;
 
     for (const windowPane of windows) {
+        if (windowPane.isLight) {
+            windowPane.intensity = targetIntensity * (windowPane.userData.intensityMultiplier ?? 1);
+            continue;
+        }
         if (!windowPane?.material) {
             continue;
         }
         windowPane.material.color.copy(_currentColor);
         windowPane.material.emissive.copy(_currentEmissive);
-        windowPane.material.emissiveIntensity = targetIntensity;
+        windowPane.material.emissiveIntensity = targetIntensity * (windowPane.userData.intensityMultiplier ?? 1);
+        if (targetOpacity !== undefined) {
+            windowPane.material.transparent = true;
+            windowPane.material.opacity = targetOpacity;
+        }
     }
 }
 

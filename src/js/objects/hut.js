@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 export function createHut() {
     const hut = new THREE.Group();
+    const windows = [];
 
     // ── Materials ──────────────────────────────────────────────────────────────
     const logMat = new THREE.MeshStandardMaterial({
@@ -364,11 +365,13 @@ export function createHut() {
         );
         flame.position.y = 1.88;
         torchGroup.add(flame);
+        windows.push(flame);
 
         // Ember point light
         const light = new THREE.PointLight(0xff6600, 2.5, 5.0);
         light.position.y = 1.9;
         torchGroup.add(light);
+        windows.push(light);
 
         hut.add(torchGroup);
     }
@@ -393,15 +396,20 @@ export function createHut() {
     const embers = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), emberMat);
     embers.scale.y = 0.3;
     embers.position.y = 0.05;
+    embers.userData.intensityMultiplier = 1.2; // 3.0 / 2.5
     pitGroup.add(embers);
+    windows.push(embers);
     // Fire cone
     const pitFlame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.55, 8), fireMat);
     pitFlame.position.y = 0.32;
     pitGroup.add(pitFlame);
+    windows.push(pitFlame);
     // Fire light
     const pitLight = new THREE.PointLight(0xff6600, 3.0, 7.0);
     pitLight.position.y = 0.5;
+    pitLight.userData.intensityMultiplier = 1.2; // 3.0 / 2.5
     pitGroup.add(pitLight);
+    windows.push(pitLight);
     hut.add(pitGroup);
 
     // ── Shadows ───────────────────────────────────────────────────────────────
@@ -411,6 +419,21 @@ export function createHut() {
             part.receiveShadow = true;
         }
     });
+
+    hut.userData.windows = windows;
+    hut.userData.windowLighting = {
+        lightColor: 0x000000,
+        lightEmissive: 0x000000,
+        lightIntensity: 0.0,
+        lightOpacity: 0.0,
+        darkColor: 0xff8800,
+        darkEmissive: 0xff5500,
+        darkIntensity: 2.5,
+        darkOpacity: 0.9,
+        shadowThreshold: 0,
+        darkReach: 1 / 3,
+        transitionSpeed: 1.0
+    };
 
     return hut;
 }

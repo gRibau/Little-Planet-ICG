@@ -9,11 +9,13 @@ import { createPropellerPlane } from './objects/propellerPlane.js';
 import { createCity } from './objects/city.js';
 import { createVolcano } from './objects/volcano.js';
 import { createPyramid } from './objects/pyramid.js';
-import { createTree } from './objects/tree.js';
+import { createForest } from './objects/forest.js';
 import { createPalmTree } from './objects/palmTree.js';
+import { createTree } from './objects/tree.js';
 import { createCargoShip } from './objects/cargoShip.js';
 import { createCow } from './objects/cow.js';
 import { createSettlement } from './objects/settlement.js';
+import { createNeighborhood } from './objects/neighborhood.js';
 
 import { setupLighting } from './environment/lighting.js';
 import { setupStars } from './environment/stars.js';
@@ -72,14 +74,14 @@ placeModelOnPlanet(city, planet, {
     altitude: -0.7,
     yawDeg: 25
 });
-const cityBuildings = city.userData.buildings ?? [];
+let lightableBuildings = city.userData.buildings ?? [];
 
 const volcano = createVolcano();
 placeModelOnPlanet(volcano, planet, {
     latitudeDeg: 27,
     longitudeDeg: 220,
     radius: 25,
-    altitude: 0.2,
+    altitude: 0,
     yawDeg: -15
 });
 
@@ -110,8 +112,8 @@ scene.add(cargoShip);
 const cow = createCow();
 cow.scale.setScalar(0.5);
 placeModelOnPlanet(cow, planet, {
-    latitudeDeg: -35,
-    longitudeDeg: -35,
+    latitudeDeg: 40,
+    longitudeDeg: -27,
     radius: 25,
     altitude: 0.5,
     yawDeg: 45
@@ -126,7 +128,19 @@ placeModelOnPlanet(settlement, planet, {
     altitude: 0.3,
     yawDeg: 130
 });
+lightableBuildings = lightableBuildings.concat(settlement.userData.buildings ?? []);
 
+
+const neighborhood = createNeighborhood();
+neighborhood.scale.setScalar(0.5);
+placeModelOnPlanet(neighborhood, planet, {
+    latitudeDeg: -37,
+    longitudeDeg: -30,
+    radius: 25,
+    altitude: 0.3,
+    yawDeg: 100
+});
+lightableBuildings = lightableBuildings.concat(neighborhood.userData.buildings ?? []);
 
 const plane = createPropellerPlane();
 plane.scale.setScalar(0.7);
@@ -135,14 +149,84 @@ scene.add(plane);
 // =======================
 // Trees
 
-const tree = createTree();
-tree.scale.setScalar(1.5);
-placeModelOnPlanet(tree, planet, {
-    latitudeDeg: 17,
-    longitudeDeg: 130,
+const forestCity = createForest();
+forestCity.scale.setScalar(1.5);
+placeModelOnPlanet(forestCity, planet, {
+    latitudeDeg: 18,
+    longitudeDeg: 140,
     radius: 25,
-    altitude: 0.8,
+    altitude: -0.3,
     yawDeg: -10
+});
+
+const treeCity = createTree();
+treeCity.scale.setScalar(1.5);
+placeModelOnPlanet(treeCity, planet, {
+    latitudeDeg: 18,
+    longitudeDeg: 100,
+    radius: 25,
+    altitude: -0.3,
+    yawDeg: -10
+});
+
+const treeCityNorth = createTree();
+treeCityNorth.scale.setScalar(1.5);
+placeModelOnPlanet(treeCityNorth, planet, {
+    latitudeDeg: 28,
+    longitudeDeg: 77,
+    radius: 25,
+    altitude: -0.3,
+    yawDeg: -10
+});
+
+const forestVillage = createForest();
+forestVillage.scale.setScalar(1.5);
+placeModelOnPlanet(forestVillage, planet, {
+    latitudeDeg: -37,
+    longitudeDeg: -30,
+    radius: 25,
+    altitude: 0.2,
+    yawDeg: 40
+});
+
+const treeVillage = createTree();
+treeVillage.scale.setScalar(1.5);
+placeModelOnPlanet(treeVillage, planet, {
+    latitudeDeg: -60,
+    longitudeDeg: 20,
+    radius: 25,
+    altitude: 0.2,
+    yawDeg: 40
+});
+
+const forestCow = createForest();
+forestCow.scale.setScalar(1.5);
+placeModelOnPlanet(forestCow, planet, {
+    latitudeDeg: 39,
+    longitudeDeg: -3,
+    radius: 25,
+    altitude: -0.5,
+    yawDeg: 70
+});
+
+const forestCow2 = createForest();
+forestCow2.scale.setScalar(1.5);
+placeModelOnPlanet(forestCow2, planet, {
+    latitudeDeg: 47,
+    longitudeDeg: -47,
+    radius: 25,
+    altitude: -0.5,
+    yawDeg: -40
+});
+
+const treeCow = createTree();
+treeCow.scale.setScalar(1.5);
+placeModelOnPlanet(treeCow, planet, {
+    latitudeDeg: 27,
+    longitudeDeg: -27,
+    radius: 25,
+    altitude: -0.5,
+    yawDeg: -40
 });
 
 const palmTree = createPalmTree();
@@ -225,7 +309,7 @@ function animate() {
 
     // Call the external animation logic
     planetAndMoonAnimations(planet, moon, satellite);
-    updateModelsWindowLighting(cityBuildings, planet, sun, {
+    updateModelsWindowLighting(lightableBuildings, planet, sun, {
         deltaTime,
         darkReach: 1 / 3,
         transitionSpeed: 1.0

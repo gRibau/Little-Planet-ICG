@@ -19,7 +19,7 @@ export function planetAndMoonAnimations(planet, moon, satellite) {
     moon.position.x = planet.position.x + flatX;
     moon.position.z = planet.position.z + flatZ;
 
-    const tiltSteepness = 0.5; 
+    const tiltSteepness = 0.5;
     moon.position.y = planet.position.y + (flatX - flatZ) * tiltSteepness;
 
     // Keep the moon's spin synchronized with its orbit so the same face
