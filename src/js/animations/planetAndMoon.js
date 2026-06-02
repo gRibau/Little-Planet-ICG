@@ -26,7 +26,7 @@ export function planetAndMoonAnimations(planet, moon, satellite) {
     // stays toward the planet and the far side remains stable.
     moon.rotation.y = -moonOrbitAngle + Math.PI;
 
-    if (satellite) {
+    if (satellite && !satellite.userData.isFiring) {
         satelliteOrbitAngle += 0.008 * -1 * motionDirection;
         const satelliteOrbitRadius = 64;
 

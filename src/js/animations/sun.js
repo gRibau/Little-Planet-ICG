@@ -16,7 +16,7 @@ export function setupSunTransition(scene, camera, sun, blackHole, sunOffset, int
     flashOverlay.style.pointerEvents = 'none';
     flashOverlay.style.transition = 'none'; // We'll control this manually
     document.body.appendChild(flashOverlay);
-    
+
     const state = {
         clickStage: 0, // 0: none, 1: waiting, 2: animating, 3: consuming, 4: resetting, 5: done
         animationTimer: 0,
@@ -81,7 +81,7 @@ export function updateSunTransition(state, deltaTime) {
 
             // Shake intensity
             let shakeIntensity = opacity * 10.0; // Max 10 units of shake
-            
+
             _originalCameraPos.copy(state.camera.position);
             originalCameraPos = _originalCameraPos;
             state.camera.position.x += (Math.random() - 0.5) * shakeIntensity;
@@ -107,7 +107,7 @@ export function updateSunTransition(state, deltaTime) {
             state.flashOverlay.style.opacity = '0';
             state.clickStage = 3; // Consuming
             state.animationTimer = 0;
-            
+
             // Record initial positions for consuming
             state.consumableModelsData = state.consumableModels.map(model => ({
                 model: model,
@@ -127,10 +127,10 @@ export function updateSunTransition(state, deltaTime) {
 
         state.consumableModelsData.forEach(data => {
             if (data.consumed) return;
-            
+
             // Move towards black hole
             data.model.position.lerpVectors(data.startPos, state.blackHole.position, easeInT);
-            
+
             // Scale down
             data.model.scale.lerpVectors(data.startScale, _zeroScale, easeInT);
 
@@ -161,7 +161,7 @@ export function updateSunTransition(state, deltaTime) {
 
             // Shake intensity
             let shakeIntensity = opacity * 10.0; // Max 10 units of shake
-            
+
             _originalCameraPos.copy(state.camera.position);
             originalCameraPos = _originalCameraPos;
             state.camera.position.x += (Math.random() - 0.5) * shakeIntensity;

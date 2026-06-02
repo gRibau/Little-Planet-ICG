@@ -26,6 +26,8 @@ import { cargoShipAnimations, setupCargoShipInteraction } from './animations/car
 import { setupPlaneInteraction } from './interactions/plane.js';
 import { updatePlaneCrashCheck } from './interactions/planeCrash.js';
 import { setupUFOInteraction, ufoAnimations } from './animations/ufoAbduction.js';
+import { setupSatelliteInteraction, satelliteAnimations } from './animations/satelliteLaser.js';
+import { setupVolcanoInteraction, volcanoAnimations } from './animations/volcanoEruption.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createBlackHole } from './objects/blackHole.js';
 import { setupSunTransition, updateSunTransition } from './animations/sun.js';
@@ -308,7 +310,9 @@ const interactionManager = setupInteractionManager(camera, renderer, scene, cont
 const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager);
 setupCargoShipInteraction(cargoShip, interactionManager);
 setupUFOInteraction(ufo, cow, scene, planet, moon, interactionManager);
-const consumableModels = [planet, moon, cargoShip, plane, satellite, ufo];
+setupSatelliteInteraction(satellite, planet, scene, interactionManager);
+setupVolcanoInteraction(volcano, interactionManager);
+const consumableModels = [planet, moon, cargoShip, plane, satellite, ufo, volcano];
 const sunTransitionState = setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels);
 
 const latLonHelper = setupLatLonHelper(camera, renderer, [
@@ -339,6 +343,8 @@ function animate() {
     planeAnimations(planet, plane, deltaTime);
     cargoShipAnimations(cargoShip, planet, deltaTime);
     ufoAnimations(deltaTime);
+    satelliteAnimations(deltaTime);
+    volcanoAnimations(deltaTime);
     planeInteraction.updateCamera(deltaTime);
 
     updatePlaneCrashCheck(planeInteraction, plane, city);
