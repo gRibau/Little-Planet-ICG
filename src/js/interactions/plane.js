@@ -72,6 +72,8 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
                     border-radius: 8px; display: flex; justify-content: center; align-items: center;
                     color: white; font-size: 24px; font-weight: bold; backdrop-filter: blur(4px);
                     -webkit-user-select: none; user-select: none;
+                    touch-action: none; -webkit-touch-callout: none;
+                    cursor: pointer;
                 `;
                 b.innerText = btn.icon;
                 
