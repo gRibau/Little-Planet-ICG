@@ -174,6 +174,8 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
     }
 
     return {
+        isPlaneSelected: () => planeSelected,
+        setPlaneSelection: (val) => setPlaneSelection(val),
         updateControls(deltaTime) {
             if (!planeSelected) {
                 return;

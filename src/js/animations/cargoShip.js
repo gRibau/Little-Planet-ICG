@@ -54,21 +54,96 @@ const _shipPos = new THREE.Vector3();
 const _rotatedOffset = new THREE.Vector3();
 const _basisMatrix = new THREE.Matrix4();
 const _localQuat = new THREE.Quaternion();
+const _tiltQuat = new THREE.Quaternion();
+const _localX = new THREE.Vector3(1, 0, 0);
 
 let shipElapsedTime = 0;
+
+export const cargoShipState = {
+    stage: 0, // 0: sailing, 1: sinking, 2: wait sunk, 3: appearing
+    timer: 0,
+    baseScale: new THREE.Vector3(),
+    initialized: false
+};
+
+export function setupCargoShipInteraction(cargoShip, interactionManager) {
+    if (!cargoShip) return;
+    
+    cargoShipState.baseScale.copy(cargoShip.scale);
+    cargoShipState.initialized = true;
+
+    interactionManager.add(cargoShip, {
+        useCursor: true,
+        onClick: () => {
+            if (cargoShipState.stage === 0) {
+                cargoShipState.stage = 1;
+                cargoShipState.timer = 0;
+            }
+        }
+    });
+}
 
 // =============================================
 // Animation tick
 
 export function cargoShipAnimations(cargoShip, planet, deltaTime = 1 / 60) {
-    if (!cargoShip) return;
+    if (!cargoShip || !cargoShipState.initialized) return;
 
-    shipElapsedTime += deltaTime;
+    let tiltAngle = 0;
+    let sinkOffset = 0;
+
+    if (cargoShipState.stage === 0) {
+        shipElapsedTime += deltaTime;
+    } else if (cargoShipState.stage === 1) {
+        cargoShipState.timer += deltaTime;
+        const duration = 2.0;
+        const t = Math.min(cargoShipState.timer / duration, 1.0);
+        
+        // Ease-in for sinking
+        const easeIn = t * t;
+        tiltAngle = -easeIn * (Math.PI / 3); // Tilt 60 degrees back
+        sinkOffset = -easeIn * 5.0;          // Sink 5 units down
+        
+        if (t >= 1.0) {
+            cargoShipState.stage = 2;
+            cargoShipState.timer = 0;
+            cargoShip.scale.set(0, 0, 0); // Hide completely while sunk
+        }
+    } else if (cargoShipState.stage === 2) {
+        cargoShipState.timer += deltaTime;
+        tiltAngle = -(Math.PI / 3);
+        sinkOffset = -5.0;
+        
+        if (cargoShipState.timer >= 1.0) { // Wait 1 second
+            cargoShipState.stage = 3;
+            cargoShipState.timer = 0;
+            tiltAngle = 0;
+            sinkOffset = 0;
+            shipElapsedTime = 0;
+        }
+    } else if (cargoShipState.stage === 3) {
+        cargoShipState.timer += deltaTime;
+        const duration = 1.0;
+        const t = Math.min(cargoShipState.timer / duration, 1.0);
+        
+        // Elastic pop/overshoot (easeOutBack)
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        const scaleT = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+        
+        cargoShip.scale.copy(cargoShipState.baseScale).multiplyScalar(scaleT);
+        
+        if (t >= 1.0) {
+            cargoShipState.stage = 0;
+            cargoShip.scale.copy(cargoShipState.baseScale);
+        }
+    }
+
     const t = (shipElapsedTime / LOOP_DURATION) % 1.0;
 
     // 1. Sample the spline and project onto the water surface
     shipRoute.getPointAt(t, _shipPos);
-    _shipPos.normalize().multiplyScalar(WATER_RADIUS - SHIP_SINK);
+    _shipPos.normalize().multiplyScalar(WATER_RADIUS - SHIP_SINK + sinkOffset);
 
     // 2. Surface normal = outward direction (same as placeModelOnPlanet uses)
     _up.copy(_shipPos).normalize();
@@ -83,6 +158,11 @@ export function cargoShipAnimations(cargoShip, planet, deltaTime = 1 / 60) {
     // 5. Build orientation quaternion (ship model: +X right, +Y up, +Z forward)
     _basisMatrix.makeBasis(_right, _up, _forward);
     _localQuat.setFromRotationMatrix(_basisMatrix);
+
+    if (tiltAngle !== 0) {
+        _tiltQuat.setFromAxisAngle(_localX, tiltAngle);
+        _localQuat.multiply(_tiltQuat);
+    }
 
     // 6. Apply position & rotation in the correct coordinate space
     if (cargoShip.parent === planet) {

@@ -22,8 +22,9 @@ import { setupStars } from './environment/stars.js';
 import { planetAndMoonAnimations } from './animations/planetAndMoon.js';
 import { planeAnimations } from './animations/plane.js';
 import { updateModelsWindowLighting } from './animations/windowLighting.js';
-import { cargoShipAnimations } from './animations/cargoShip.js';
+import { cargoShipAnimations, setupCargoShipInteraction } from './animations/cargoShip.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
+import { updatePlaneCrashCheck } from './interactions/planeCrash.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createBlackHole } from './objects/blackHole.js';
 import { setupSunTransition, updateSunTransition } from './animations/sun.js';
@@ -304,6 +305,7 @@ camera.position.x = 150;
 const interactionManager = setupInteractionManager(camera, renderer, scene, controls);
 
 const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager);
+setupCargoShipInteraction(cargoShip, interactionManager);
 const consumableModels = [planet, moon, cargoShip, plane, satellite];
 const sunTransitionState = setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels);
 
@@ -313,7 +315,6 @@ const latLonHelper = setupLatLonHelper(camera, renderer, [
 ]);
 
 const clock = new THREE.Clock();
-
 
 // =============================================
 // Animation loop
@@ -336,6 +337,8 @@ function animate() {
     planeAnimations(planet, plane, deltaTime);
     cargoShipAnimations(cargoShip, planet, deltaTime);
     planeInteraction.updateCamera(deltaTime);
+
+    updatePlaneCrashCheck(planeInteraction, plane, city);
 
     if (controls.enabled) {
         controls.update();
