@@ -34,8 +34,6 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         ArrowRight: false
     };
 
-    const isMobile = window.matchMedia("(pointer: coarse)").matches;
-    
     const mobileState = {
         accelerate: false,
         brake: false,
@@ -47,18 +45,19 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         tiltRight: false
     };
     
-    let mobileControlsOverlay = null;
-
-    if (isMobile) {
-        mobileControlsOverlay = document.createElement('div');
-        mobileControlsOverlay.style.cssText = `
-            position: fixed; bottom: 30px; left: 0; width: 100vw; 
-            display: none; justify-content: space-between; padding: 0 20px;
-            box-sizing: border-box; z-index: 1000; opacity: 0; transition: opacity 0.3s;
-            user-select: none; pointer-events: none;
-        `;
-        
-        function createDPad(layout) {
+    function isMobile() {
+        return window.matchMedia("(pointer: coarse)").matches || ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
+    }
+    
+    let mobileControlsOverlay = document.createElement('div');
+    mobileControlsOverlay.style.cssText = `
+        position: fixed; bottom: 30px; left: 0; width: 100vw; 
+        display: none; justify-content: space-between; padding: 0 20px;
+        box-sizing: border-box; z-index: 1000; opacity: 0; transition: opacity 0.3s;
+        user-select: none; pointer-events: none;
+    `;
+    
+    function createDPad(layout) {
             const pad = document.createElement('div');
             pad.style.cssText = `
                 display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px);
@@ -76,8 +75,13 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
                 `;
                 b.innerText = btn.icon;
                 
-                const press = (e) => { e.preventDefault(); mobileState[btn.action] = true; b.style.background = 'rgba(255, 255, 255, 0.5)'; };
-                const release = (e) => { e.preventDefault(); mobileState[btn.action] = false; b.style.background = 'rgba(255, 255, 255, 0.2)'; };
+                const press = (e) => { e.preventDefault(); e.stopPropagation(); mobileState[btn.action] = true; b.style.background = 'rgba(255, 255, 255, 0.5)'; };
+                const release = (e) => { e.preventDefault(); e.stopPropagation(); mobileState[btn.action] = false; b.style.background = 'rgba(255, 255, 255, 0.2)'; };
+                
+                b.addEventListener('pointerdown', press, {passive: false});
+                b.addEventListener('pointerup', release, {passive: false});
+                b.addEventListener('pointercancel', release, {passive: false});
+                b.addEventListener('pointerleave', release, {passive: false});
                 
                 b.addEventListener('touchstart', press, {passive: false});
                 b.addEventListener('touchend', release, {passive: false});
@@ -102,10 +106,9 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
             { col: 2, row: 3, action: 'rise', icon: '⏷' }
         ]);
 
-        mobileControlsOverlay.appendChild(leftPad);
-        mobileControlsOverlay.appendChild(rightPad);
-        document.body.appendChild(mobileControlsOverlay);
-    }
+    mobileControlsOverlay.appendChild(leftPad);
+    mobileControlsOverlay.appendChild(rightPad);
+    document.body.appendChild(mobileControlsOverlay);
 
     let planeSelected = false;
     let recenterElapsed = recenterDuration;
@@ -136,7 +139,7 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         keyState.ArrowDown = false;
         keyState.ArrowLeft = false;
         keyState.ArrowRight = false;
-        if (isMobile) {
+        if (isMobile()) {
             for (let k in mobileState) mobileState[k] = false;
         }
     }
@@ -148,7 +151,7 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
 
         planeSelected = isSelected;
         
-        if (isMobile && mobileControlsOverlay) {
+        if (isMobile()) {
             controlsOverlay.style.display = 'none';
             if (planeSelected) {
                 mobileControlsOverlay.style.display = 'flex';
@@ -161,6 +164,7 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
                 }, 300);
             }
         } else {
+            mobileControlsOverlay.style.display = 'none';
             controlsOverlay.style.display = planeSelected ? 'block' : 'none';
         }
         
@@ -273,16 +277,17 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
                 return;
             }
 
+            const mobileActive = isMobile();
             updatePlaneControls(
                 {
-                    accelerate: keyState.KeyW || (isMobile && mobileState.accelerate),
-                    brake: keyState.KeyS || (isMobile && mobileState.brake),
-                    turnLeft: keyState.KeyA || (isMobile && mobileState.turnLeft),
-                    turnRight: keyState.KeyD || (isMobile && mobileState.turnRight),
-                    dip: keyState.ArrowUp || (isMobile && mobileState.dip),
-                    rise: keyState.ArrowDown || (isMobile && mobileState.rise),
-                    tiltLeft: keyState.ArrowLeft || (isMobile && mobileState.tiltLeft),
-                    tiltRight: keyState.ArrowRight || (isMobile && mobileState.tiltRight)
+                    accelerate: keyState.KeyW || (mobileActive && mobileState.accelerate),
+                    brake: keyState.KeyS || (mobileActive && mobileState.brake),
+                    turnLeft: keyState.KeyA || (mobileActive && mobileState.turnLeft),
+                    turnRight: keyState.KeyD || (mobileActive && mobileState.turnRight),
+                    dip: keyState.ArrowUp || (mobileActive && mobileState.dip),
+                    rise: keyState.ArrowDown || (mobileActive && mobileState.rise),
+                    tiltLeft: keyState.ArrowLeft || (mobileActive && mobileState.tiltLeft),
+                    tiltRight: keyState.ArrowRight || (mobileActive && mobileState.tiltRight)
                 },
                 deltaTime
             );
