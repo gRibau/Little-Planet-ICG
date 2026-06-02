@@ -6,9 +6,7 @@ const followHeight = 5;
 const followLerpSpeed = 24;
 const recenterDuration = 0.35;
 
-export function setupPlaneInteraction(camera, renderer, controls, planet, plane) {
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
+export function setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager) {
     const cameraFollowTarget = new THREE.Vector3();
     const cameraLookAhead = new THREE.Vector3();
     const cameraQuatTarget = new THREE.Quaternion();
@@ -37,7 +35,6 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
     };
 
     let planeSelected = false;
-    let hoveringPlane = false;
     let recenterElapsed = recenterDuration;
 
     const controlsOverlay = document.createElement('div');
@@ -76,7 +73,6 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         planeSelected = isSelected;
         controlsOverlay.style.display = planeSelected ? 'block' : 'none';
         controls.enabled = !isSelected;
-        controls.enableRotate = !isSelected && !hoveringPlane;
 
         recenterStartPosition.copy(camera.position);
         recenterStartTarget.copy(controls.target);
@@ -90,43 +86,16 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         }
     }
 
-    function setHoveringPlane(isHovering) {
-        hoveringPlane = isHovering;
-        renderer.domElement.style.cursor = hoveringPlane ? 'pointer' : 'default';
-        controls.enableRotate = !hoveringPlane;
-    }
-
-    function updatePointerFromEvent(event) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    }
-
-    function handlePointerDown(event) {
-        updatePointerFromEvent(event);
-
-        raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObject(plane, true);
-        const clickedPlane = hits.length > 0;
-        setPlaneSelection(clickedPlane);
-
-        if (clickedPlane) {
-            event.preventDefault();
-            event.stopPropagation();
+    interactionManager.add(plane, {
+        useCursor: true,
+        disableControls: true,
+        onClick: (event) => {
+            setPlaneSelection(true);
+        },
+        onClickMissed: (event) => {
+            setPlaneSelection(false);
         }
-    }
-
-    function handlePointerMove(event) {
-        updatePointerFromEvent(event);
-
-        raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObject(plane, true);
-        setHoveringPlane(hits.length > 0);
-    }
-
-    function handlePointerLeave() {
-        setHoveringPlane(false);
-    }
+    });
 
     function handleKeyDown(event) {
         if (!planeSelected) {
@@ -148,9 +117,6 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
         }
     }
 
-    renderer.domElement.addEventListener('pointerdown', handlePointerDown, true);
-    renderer.domElement.addEventListener('pointermove', handlePointerMove);
-    renderer.domElement.addEventListener('pointerleave', handlePointerLeave);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
@@ -232,13 +198,8 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane)
             updateFollowCamera(deltaTime);
         },
         dispose() {
-            renderer.domElement.removeEventListener('pointerdown', handlePointerDown, true);
-            renderer.domElement.removeEventListener('pointermove', handlePointerMove);
-            renderer.domElement.removeEventListener('pointerleave', handlePointerLeave);
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
-            renderer.domElement.style.cursor = 'default';
-            controls.enableRotate = true;
             controlsOverlay.remove();
         }
     };

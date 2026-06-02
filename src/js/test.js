@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // Import the model for testing here, for example:
 // import { Satellite } from './vehicles.js'; 
+import { createPropellerPlane } from './objects/propellerPlane.js';
 import { createCity } from './objects/city.js';
 import { createVolcano } from './objects/volcano.js';
 import { createPyramid } from './objects/pyramid.js';
@@ -18,8 +19,8 @@ import { createCargoShip } from './objects/cargoShip.js';
 import { createBlackHole } from './objects/blackHole.js';
 import { createForest } from './objects/forest.js';
 import { createNeighborhood } from './objects/neighborhood.js';
-// import { createSatellite } from './objects/satellite.js';
-// import { createUFO } from './objects/ufo.js';
+import { createSatellite } from './objects/satellite.js';
+import { createUFO } from './objects/ufo.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
@@ -114,10 +115,10 @@ scene.add(gridHelper);
 // scene.add(hut);
 
 // Black hole
-// const blackHole = createBlackHole();
-// blackHole.scale.setScalar(1.0);
-// blackHole.position.set(0, 0, 0);
-// scene.add(blackHole);
+const blackHole = createBlackHole();
+blackHole.scale.setScalar(1.0);
+blackHole.position.set(0, 0, 0);
+scene.add(blackHole);
 
 // Forest
 // const forest = createForest();
@@ -125,9 +126,14 @@ scene.add(gridHelper);
 // scene.add(forest);
 
 // Neighborhood
-const neighborhood = createNeighborhood();
-neighborhood.position.set(0, 0, 0);
-scene.add(neighborhood);
+// const neighborhood = createNeighborhood();
+// neighborhood.position.set(0, 0, 0);
+// scene.add(neighborhood);
+
+// UFO
+// const ufo = createUFO();
+// ufo.position.set(0, 0, 0);
+// scene.add(ufo);
 
 // House
 // const house = createHouse();

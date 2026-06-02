@@ -25,6 +25,9 @@ import { updateModelsWindowLighting } from './animations/windowLighting.js';
 import { cargoShipAnimations } from './animations/cargoShip.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createBlackHole } from './objects/blackHole.js';
+import { setupSunTransition, updateSunTransition } from './animations/sun.js';
+import { setupInteractionManager } from './interactions/interactionManager.js';
 
 
 // ================================================================
@@ -55,6 +58,11 @@ scene.add(planet);
 const sun = createSun();
 scene.add(sun);
 const sunOffset = sun.position.clone();
+
+const blackHole = createBlackHole();
+blackHole.scale.setScalar(150);
+blackHole.rotation.x = - Math.PI / 12;
+blackHole.rotation.y = - Math.PI / 12;
 
 const moon = createMoon();
 scene.add(moon);
@@ -283,7 +291,7 @@ scene.add(satellite);
 // ================================================================
 // Final Setup
 
-setupLighting(scene);
+const { sunLight, ambientLight } = setupLighting(scene);
 
 // Controls for mouse interaction
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -292,7 +300,12 @@ controls.minDistance = 50;   // Minimum zoom distance (planet radius is 25)
 controls.maxDistance = 400; // Maximum zoom distance
 camera.position.x = 150;
 
-const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane);
+const interactionManager = setupInteractionManager(camera, renderer, controls);
+
+const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager);
+const consumableModels = [planet, moon, cargoShip, plane, satellite];
+const sunTransitionState = setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels);
+
 const clock = new THREE.Clock();
 
 
@@ -305,7 +318,6 @@ function animate() {
 
     // Keep background elements centered around the camera.
     starField.position.copy(camera.position);
-    sun.position.copy(camera.position).add(sunOffset);
 
     // Call the external animation logic
     planetAndMoonAnimations(planet, moon, satellite);
@@ -322,7 +334,15 @@ function animate() {
     if (controls.enabled) {
         controls.update();
     }
+
+    // Sun switch animation logic
+    const originalCameraPos = updateSunTransition(sunTransitionState, deltaTime);
+
     renderer.render(scene, camera);
+
+    if (originalCameraPos) {
+        camera.position.copy(originalCameraPos);
+    }
 }
 
 
