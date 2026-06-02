@@ -34,6 +34,79 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         ArrowRight: false
     };
 
+    const isMobile = window.matchMedia("(pointer: coarse)").matches;
+    
+    const mobileState = {
+        accelerate: false,
+        brake: false,
+        turnLeft: false,
+        turnRight: false,
+        dip: false,
+        rise: false,
+        tiltLeft: false,
+        tiltRight: false
+    };
+    
+    let mobileControlsOverlay = null;
+
+    if (isMobile) {
+        mobileControlsOverlay = document.createElement('div');
+        mobileControlsOverlay.style.cssText = `
+            position: fixed; bottom: 30px; left: 0; width: 100vw; 
+            display: none; justify-content: space-between; padding: 0 20px;
+            box-sizing: border-box; z-index: 1000; opacity: 0; transition: opacity 0.3s;
+            user-select: none; pointer-events: none;
+        `;
+        
+        function createDPad(layout) {
+            const pad = document.createElement('div');
+            pad.style.cssText = `
+                display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px);
+                gap: 5px; pointer-events: auto;
+            `;
+            
+            layout.forEach(btn => {
+                const b = document.createElement('div');
+                b.style.cssText = `
+                    grid-column: ${btn.col}; grid-row: ${btn.row};
+                    background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4);
+                    border-radius: 8px; display: flex; justify-content: center; align-items: center;
+                    color: white; font-size: 24px; font-weight: bold; backdrop-filter: blur(4px);
+                    -webkit-user-select: none; user-select: none;
+                `;
+                b.innerText = btn.icon;
+                
+                const press = (e) => { e.preventDefault(); mobileState[btn.action] = true; b.style.background = 'rgba(255, 255, 255, 0.5)'; };
+                const release = (e) => { e.preventDefault(); mobileState[btn.action] = false; b.style.background = 'rgba(255, 255, 255, 0.2)'; };
+                
+                b.addEventListener('touchstart', press, {passive: false});
+                b.addEventListener('touchend', release, {passive: false});
+                b.addEventListener('touchcancel', release, {passive: false});
+                
+                pad.appendChild(b);
+            });
+            return pad;
+        }
+
+        const leftPad = createDPad([
+            { col: 2, row: 1, action: 'accelerate', icon: '⏶' },
+            { col: 1, row: 2, action: 'turnLeft', icon: '⏴' },
+            { col: 3, row: 2, action: 'turnRight', icon: '⏵' },
+            { col: 2, row: 3, action: 'brake', icon: '⏷' }
+        ]);
+
+        const rightPad = createDPad([
+            { col: 2, row: 1, action: 'dip', icon: '⏶' },
+            { col: 1, row: 2, action: 'tiltLeft', icon: '⏴' },
+            { col: 3, row: 2, action: 'tiltRight', icon: '⏵' },
+            { col: 2, row: 3, action: 'rise', icon: '⏷' }
+        ]);
+
+        mobileControlsOverlay.appendChild(leftPad);
+        mobileControlsOverlay.appendChild(rightPad);
+        document.body.appendChild(mobileControlsOverlay);
+    }
+
     let planeSelected = false;
     let recenterElapsed = recenterDuration;
 
@@ -63,6 +136,9 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         keyState.ArrowDown = false;
         keyState.ArrowLeft = false;
         keyState.ArrowRight = false;
+        if (isMobile) {
+            for (let k in mobileState) mobileState[k] = false;
+        }
     }
 
     function setPlaneSelection(isSelected) {
@@ -71,7 +147,23 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
         }
 
         planeSelected = isSelected;
-        controlsOverlay.style.display = planeSelected ? 'block' : 'none';
+        
+        if (isMobile && mobileControlsOverlay) {
+            controlsOverlay.style.display = 'none';
+            if (planeSelected) {
+                mobileControlsOverlay.style.display = 'flex';
+                void mobileControlsOverlay.offsetWidth; // Trigger reflow
+                mobileControlsOverlay.style.opacity = '0.6';
+            } else {
+                mobileControlsOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    if (!planeSelected) mobileControlsOverlay.style.display = 'none';
+                }, 300);
+            }
+        } else {
+            controlsOverlay.style.display = planeSelected ? 'block' : 'none';
+        }
+        
         controls.enabled = !isSelected;
 
         recenterStartPosition.copy(camera.position);
@@ -183,14 +275,14 @@ export function setupPlaneInteraction(camera, renderer, controls, planet, plane,
 
             updatePlaneControls(
                 {
-                    accelerate: keyState.KeyW,
-                    brake: keyState.KeyS,
-                    turnLeft: keyState.KeyA,
-                    turnRight: keyState.KeyD,
-                    dip: keyState.ArrowUp,
-                    rise: keyState.ArrowDown,
-                    tiltLeft: keyState.ArrowLeft,
-                    tiltRight: keyState.ArrowRight
+                    accelerate: keyState.KeyW || (isMobile && mobileState.accelerate),
+                    brake: keyState.KeyS || (isMobile && mobileState.brake),
+                    turnLeft: keyState.KeyA || (isMobile && mobileState.turnLeft),
+                    turnRight: keyState.KeyD || (isMobile && mobileState.turnRight),
+                    dip: keyState.ArrowUp || (isMobile && mobileState.dip),
+                    rise: keyState.ArrowDown || (isMobile && mobileState.rise),
+                    tiltLeft: keyState.ArrowLeft || (isMobile && mobileState.tiltLeft),
+                    tiltRight: keyState.ArrowRight || (isMobile && mobileState.tiltRight)
                 },
                 deltaTime
             );
