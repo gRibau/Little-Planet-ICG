@@ -203,5 +203,11 @@ export function createUFO() {
         }
     });
 
+    // Abduction Tractor Beam Light (initially off)
+    const abductionLight = new THREE.PointLight(0x00ff00, 0, 15);
+    abductionLight.position.set(0, -1, 0); // slightly below the saucer
+    abductionLight.name = 'abductionLight';
+    ufo.add(abductionLight);
+
     return ufo;
 }

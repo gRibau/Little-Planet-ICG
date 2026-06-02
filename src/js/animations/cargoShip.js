@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyPopAnimation } from '../utils/animations.js';
 
 // =============================================
 // Waypoints (lat/lon in degrees) — edit these manually.
@@ -126,12 +127,7 @@ export function cargoShipAnimations(cargoShip, planet, deltaTime = 1 / 60) {
         const duration = 1.0;
         const t = Math.min(cargoShipState.timer / duration, 1.0);
         
-        // Elastic pop/overshoot (easeOutBack)
-        const c1 = 1.70158;
-        const c3 = c1 + 1;
-        const scaleT = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-        
-        cargoShip.scale.copy(cargoShipState.baseScale).multiplyScalar(scaleT);
+        applyPopAnimation(cargoShip, cargoShipState.baseScale, t);
         
         if (t >= 1.0) {
             cargoShipState.stage = 0;

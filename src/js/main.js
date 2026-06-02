@@ -25,6 +25,7 @@ import { updateModelsWindowLighting } from './animations/windowLighting.js';
 import { cargoShipAnimations, setupCargoShipInteraction } from './animations/cargoShip.js';
 import { setupPlaneInteraction } from './interactions/plane.js';
 import { updatePlaneCrashCheck } from './interactions/planeCrash.js';
+import { setupUFOInteraction, ufoAnimations } from './animations/ufoAbduction.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createBlackHole } from './objects/blackHole.js';
 import { setupSunTransition, updateSunTransition } from './animations/sun.js';
@@ -306,7 +307,8 @@ const interactionManager = setupInteractionManager(camera, renderer, scene, cont
 
 const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager);
 setupCargoShipInteraction(cargoShip, interactionManager);
-const consumableModels = [planet, moon, cargoShip, plane, satellite];
+setupUFOInteraction(ufo, cow, scene, planet, moon, interactionManager);
+const consumableModels = [planet, moon, cargoShip, plane, satellite, ufo];
 const sunTransitionState = setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels);
 
 const latLonHelper = setupLatLonHelper(camera, renderer, [
@@ -336,6 +338,7 @@ function animate() {
     planeInteraction.updateControls(deltaTime);
     planeAnimations(planet, plane, deltaTime);
     cargoShipAnimations(cargoShip, planet, deltaTime);
+    ufoAnimations(deltaTime);
     planeInteraction.updateCamera(deltaTime);
 
     updatePlaneCrashCheck(planeInteraction, plane, city);
