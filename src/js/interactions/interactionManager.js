@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export function setupInteractionManager(camera, renderer, controls = null) {
+export function setupInteractionManager(camera, renderer, scene, controls = null) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const interactables = [];
@@ -18,11 +18,16 @@ export function setupInteractionManager(camera, renderer, controls = null) {
 
         let hitInteractable = null;
 
-        for (const item of interactables) {
-            const hits = raycaster.intersectObject(item.object, true);
-            if (hits.length > 0) {
-                hitInteractable = item;
-                break; // Stop at first hit
+        const hits = raycaster.intersectObject(scene, true);
+        if (hits.length > 0) {
+            let current = hits[0].object;
+            while (current) {
+                const matchedItem = interactables.find(item => item.object === current);
+                if (matchedItem) {
+                    hitInteractable = matchedItem;
+                    break;
+                }
+                current = current.parent;
             }
         }
 
@@ -49,16 +54,21 @@ export function setupInteractionManager(camera, renderer, controls = null) {
 
         let clickedAny = false;
 
-        for (const item of interactables) {
-            const hits = raycaster.intersectObject(item.object, true);
-            if (hits.length > 0) {
-                if (item.onClick) item.onClick(event);
-                if (item.stopPropagation) {
-                    event.preventDefault();
-                    event.stopPropagation();
+        const hits = raycaster.intersectObject(scene, true);
+        if (hits.length > 0) {
+            let current = hits[0].object;
+            while (current) {
+                const matchedItem = interactables.find(item => item.object === current);
+                if (matchedItem) {
+                    if (matchedItem.onClick) matchedItem.onClick(event);
+                    if (matchedItem.stopPropagation) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    clickedAny = true;
+                    break;
                 }
-                clickedAny = true;
-                break;
+                current = current.parent;
             }
         }
 

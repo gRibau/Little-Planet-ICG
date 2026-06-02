@@ -301,7 +301,7 @@ controls.minDistance = 50;   // Minimum zoom distance (planet radius is 25)
 controls.maxDistance = 400; // Maximum zoom distance
 camera.position.x = 150;
 
-const interactionManager = setupInteractionManager(camera, renderer, controls);
+const interactionManager = setupInteractionManager(camera, renderer, scene, controls);
 
 const planeInteraction = setupPlaneInteraction(camera, renderer, controls, planet, plane, interactionManager);
 const consumableModels = [planet, moon, cargoShip, plane, satellite];

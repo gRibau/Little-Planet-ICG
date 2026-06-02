@@ -67,17 +67,15 @@ export function cargoShipAnimations(cargoShip, planet, deltaTime = 1 / 60) {
     const t = (shipElapsedTime / LOOP_DURATION) % 1.0;
 
     // 1. Sample the spline and project onto the water surface
-    const rawPos = shipRoute.getPointAt(t);
-    _shipPos.copy(rawPos).normalize().multiplyScalar(WATER_RADIUS - SHIP_SINK);
+    shipRoute.getPointAt(t, _shipPos);
+    _shipPos.normalize().multiplyScalar(WATER_RADIUS - SHIP_SINK);
 
     // 2. Surface normal = outward direction (same as placeModelOnPlanet uses)
     _up.copy(_shipPos).normalize();
 
     // 3. Travel direction: spline tangent projected onto the local tangent plane
-    const tangent = shipRoute.getTangentAt(t);
-    _forward.copy(tangent)
-        .sub(_up.clone().multiplyScalar(tangent.dot(_up)))
-        .normalize();
+    shipRoute.getTangentAt(t, _forward);
+    _forward.addScaledVector(_up, -_forward.dot(_up)).normalize();
 
     // 4. Right vector completes the basis (Up × Forward for right-handed system)
     _right.crossVectors(_up, _forward).normalize();

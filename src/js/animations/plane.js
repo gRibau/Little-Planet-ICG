@@ -44,6 +44,7 @@ const velocityUp = new THREE.Vector3();
 const cameraAnchorQuaternion = new THREE.Quaternion();
 const pitchQuaternion = new THREE.Quaternion();
 const rollQuaternion = new THREE.Quaternion();
+const _planeOrientation = new THREE.Matrix4();
 
 function moveToward(currentValue, targetValue, maxStep) {
     if (Math.abs(targetValue - currentValue) <= maxStep) {
@@ -184,8 +185,8 @@ export function planeAnimations(planet, plane, deltaTime = 1 / 60) {
     orientedRight.applyQuaternion(rollQuaternion).normalize();
     orientedUp.applyQuaternion(rollQuaternion).normalize();
 
-    const planeOrientation = new THREE.Matrix4().makeBasis(orientedForward, orientedUp, orientedRight);
-    cameraAnchorQuaternion.setFromRotationMatrix(planeOrientation);
+    _planeOrientation.makeBasis(orientedForward, orientedUp, orientedRight);
+    cameraAnchorQuaternion.setFromRotationMatrix(_planeOrientation);
 
     basePosition.set(planet.position.x + planeX, planet.position.y + planeY, planet.position.z + planeZ);
     velocityRight.copy(orientedRight).multiplyScalar(laneOffsetRight);
@@ -193,7 +194,7 @@ export function planeAnimations(planet, plane, deltaTime = 1 / 60) {
     planeOffset.copy(velocityRight).add(velocityUp);
 
     plane.position.copy(basePosition).add(planeOffset);
-    plane.quaternion.setFromRotationMatrix(planeOrientation);
+    plane.quaternion.setFromRotationMatrix(_planeOrientation);
 
     if (!plane.userData.cameraAnchorPosition) {
         plane.userData.cameraAnchorPosition = new THREE.Vector3();

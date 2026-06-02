@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+const _originalCameraPos = new THREE.Vector3();
+const _zeroScale = new THREE.Vector3(0, 0, 0);
+
 export function setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels = []) {
     // Overlay for white flash
     const flashOverlay = document.createElement('div');
@@ -79,7 +82,8 @@ export function updateSunTransition(state, deltaTime) {
             // Shake intensity
             let shakeIntensity = opacity * 10.0; // Max 10 units of shake
             
-            originalCameraPos = state.camera.position.clone();
+            _originalCameraPos.copy(state.camera.position);
+            originalCameraPos = _originalCameraPos;
             state.camera.position.x += (Math.random() - 0.5) * shakeIntensity;
             state.camera.position.y += (Math.random() - 0.5) * shakeIntensity;
             state.camera.position.z += (Math.random() - 0.5) * shakeIntensity;
@@ -128,7 +132,7 @@ export function updateSunTransition(state, deltaTime) {
             data.model.position.lerpVectors(data.startPos, state.blackHole.position, easeInT);
             
             // Scale down
-            data.model.scale.lerpVectors(data.startScale, new THREE.Vector3(0,0,0), easeInT);
+            data.model.scale.lerpVectors(data.startScale, _zeroScale, easeInT);
 
             if (t >= 1.0) {
                 state.scene.remove(data.model);
@@ -158,7 +162,8 @@ export function updateSunTransition(state, deltaTime) {
             // Shake intensity
             let shakeIntensity = opacity * 10.0; // Max 10 units of shake
             
-            originalCameraPos = state.camera.position.clone();
+            _originalCameraPos.copy(state.camera.position);
+            originalCameraPos = _originalCameraPos;
             state.camera.position.x += (Math.random() - 0.5) * shakeIntensity;
             state.camera.position.y += (Math.random() - 0.5) * shakeIntensity;
             state.camera.position.z += (Math.random() - 0.5) * shakeIntensity;
