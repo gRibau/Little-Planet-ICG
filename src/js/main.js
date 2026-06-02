@@ -28,6 +28,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createBlackHole } from './objects/blackHole.js';
 import { setupSunTransition, updateSunTransition } from './animations/sun.js';
 import { setupInteractionManager } from './interactions/interactionManager.js';
+import { setupLatLonHelper } from './utils/latLonHelper.js';
 
 
 // ================================================================
@@ -306,6 +307,11 @@ const planeInteraction = setupPlaneInteraction(camera, renderer, controls, plane
 const consumableModels = [planet, moon, cargoShip, plane, satellite];
 const sunTransitionState = setupSunTransition(scene, camera, sun, blackHole, sunOffset, interactionManager, sunLight, ambientLight, consumableModels);
 
+const latLonHelper = setupLatLonHelper(camera, renderer, [
+    { mesh: planet, label: 'Planet', radius: 25 },
+    { mesh: moon, label: 'Moon', radius: 7 },
+]);
+
 const clock = new THREE.Clock();
 
 
@@ -333,6 +339,12 @@ function animate() {
 
     if (controls.enabled) {
         controls.update();
+    }
+
+    // If the helper is active, make the camera orbit with the planet so the surface appears stable
+    if (latLonHelper.isEnabled()) {
+        camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.004);
+        camera.lookAt(controls.target);
     }
 
     // Sun switch animation logic

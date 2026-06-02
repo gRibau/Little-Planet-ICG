@@ -1,90 +1,100 @@
 import * as THREE from 'three';
 
-// 1. Defined waypoints in spherical coordinates that stay strictly in deep ocean (verified by analysis)
+// =============================================
+// Waypoints (lat/lon in degrees) — edit these manually.
+// The ship sails through them in order, looping back to the start.
 const waypoints = [
-    { lat: -5, lon: 160 },
-    { lat: -5, lon: 100 },
-    { lat: -5, lon: 40 },
-    { lat: 5, lon: 10 },
-    { lat: 5, lon: -10 },
-    { lat: -15, lon: -45 },
-    { lat: -15, lon: -90 },
-    { lat: -15, lon: -135 },
-    { lat: -5, lon: -180 }, // wraps around the planet
+    { lat: -16, lon: 173 },
+    { lat: -34, lon: 123 },
+    { lat: -21, lon: 67 },
+    { lat: 3, lon: 43 },
+    { lat: 10, lon: -12 },
+    { lat: 5, lon: -89 },
+    { lat: -38, lon: -142 }
+    // {lat: , lon: }
 ];
 
-const planetRadius = 25;
-const shipAltitude = 0.08; // sit perfectly in the water
+// =============================================
+// Configuration
+const PLANET_RADIUS = 25;
+const WATER_RADIUS = 24.5;       // Planet radius (25) + displacementBias (-0.5)
+const SHIP_SINK = 0.2;           // How far below the water surface the ship origin sits
+const LOOP_DURATION = 120;       // Seconds for one full loop
 
-// Helper: Convert lat/lon degrees to standard ICG-Project Cartesian coordinates
-function sphericalToCartesian(latDeg, lonDeg, radius, altitude) {
+// =============================================
+// Helper: lat/lon → surface normal (same math as placeModelOnPlanet)
+
+const _normal = new THREE.Vector3();
+
+function latLonToNormal(latDeg, lonDeg) {
     const lat = THREE.MathUtils.degToRad(latDeg);
     const lon = THREE.MathUtils.degToRad(lonDeg);
-    const x = Math.cos(lat) * Math.cos(lon);
-    const y = Math.sin(lat);
-    const z = Math.cos(lat) * Math.sin(lon);
-    return new THREE.Vector3(x, y, z).normalize().multiplyScalar(radius + altitude);
+    return _normal.set(
+        Math.cos(lat) * Math.cos(lon),
+        Math.sin(lat),
+        Math.cos(lat) * Math.sin(lon)
+    ).normalize().clone();
 }
 
-// Convert spherical waypoints to 3D Cartesian coordinates
-const curvePoints = waypoints.map(wp => 
-    sphericalToCartesian(wp.lat, wp.lon, planetRadius, shipAltitude)
+// =============================================
+// Build the spline from waypoints
+
+const curvePoints = waypoints.map(wp =>
+    latLonToNormal(wp.lat, wp.lon).multiplyScalar(PLANET_RADIUS)
 );
 
-// Create a closed Catmull-Rom spline curve that naturally interpolates between the waypoints
 const shipRoute = new THREE.CatmullRomCurve3(curvePoints, true);
 
+// =============================================
+// Reusable temporaries (avoids per-frame allocations)
+const _up = new THREE.Vector3();
+const _forward = new THREE.Vector3();
+const _right = new THREE.Vector3();
+const _shipPos = new THREE.Vector3();
+const _rotatedOffset = new THREE.Vector3();
+const _basisMatrix = new THREE.Matrix4();
+const _localQuat = new THREE.Quaternion();
+
 let shipElapsedTime = 0;
-const loopDuration = 120; // 120 seconds to make a complete, elegant lap around the globe
+
+// =============================================
+// Animation tick
 
 export function cargoShipAnimations(cargoShip, planet, deltaTime = 1 / 60) {
     if (!cargoShip) return;
 
     shipElapsedTime += deltaTime;
-    const t = (shipElapsedTime / loopDuration) % 1.0;
+    const t = (shipElapsedTime / LOOP_DURATION) % 1.0;
 
-    // 1. Get raw position along the spline
+    // 1. Sample the spline and project onto the water surface
     const rawPos = shipRoute.getPointAt(t);
+    _shipPos.copy(rawPos).normalize().multiplyScalar(WATER_RADIUS - SHIP_SINK);
 
-    // 2. Project back onto the exact sphere surface.
-    // The water surface is actually at radius 24.5 because of displacementBias: -0.5.
-    // The ship's bottom is at local Y = -0.9. With scale 0.6, the bottom is -0.54 below origin.
-    // So the origin must be at radius 24.5 + 0.54 = 25.04 to keep the bottom exactly on the water.
-    const waterRadius = 24.5;
-    const shipBottomOffset = 0.54;
-    const targetRadius = waterRadius + shipBottomOffset;
+    // 2. Surface normal = outward direction (same as placeModelOnPlanet uses)
+    _up.copy(_shipPos).normalize();
 
-    const shipPosLocal = rawPos.clone().normalize().multiplyScalar(targetRadius);
+    // 3. Travel direction: spline tangent projected onto the local tangent plane
+    const tangent = shipRoute.getTangentAt(t);
+    _forward.copy(tangent)
+        .sub(_up.clone().multiplyScalar(tangent.dot(_up)))
+        .normalize();
 
-    // 3. Calculate traveling direction (tangent of the curve)
-    const tangent = shipRoute.getTangentAt(t).normalize();
+    // 4. Right vector completes the basis (Up × Forward for right-handed system)
+    _right.crossVectors(_up, _forward).normalize();
 
-    // Up vector is the local surface normal (pointing directly away from the planet center)
-    const up = shipPosLocal.clone().normalize();
+    // 5. Build orientation quaternion (ship model: +X right, +Y up, +Z forward)
+    _basisMatrix.makeBasis(_right, _up, _forward);
+    _localQuat.setFromRotationMatrix(_basisMatrix);
 
-    // Project tangent onto the local horizontal plane to ensure it remains parallel to the ocean surface
-    const forward = tangent.clone().sub(up.clone().multiplyScalar(tangent.dot(up))).normalize();
-
-    // Right vector must be Up x Forward to maintain a valid right-handed coordinate system (Determinant = +1).
-    // Previously, Forward x Up resulted in Left (-X), creating a reflection matrix which broke the quaternion!
-    const right = new THREE.Vector3().crossVectors(up, forward).normalize();
-
-    // 4. Align the cargo ship model.
-    // The ship's front is aligned to +Z, up to +Y, right to +X.
-    const basisMatrix = new THREE.Matrix4().makeBasis(right, up, forward);
-    const localQuat = new THREE.Quaternion().setFromRotationMatrix(basisMatrix);
-
-    // 5. Handle world vs local parent space
+    // 6. Apply position & rotation in the correct coordinate space
     if (cargoShip.parent === planet) {
-        // If it is a child of planet, we set local coordinates directly
-        cargoShip.position.copy(shipPosLocal);
-        cargoShip.quaternion.copy(localQuat);
+        // Ship is a child of planet → set local coords directly
+        cargoShip.position.copy(_shipPos);
+        cargoShip.quaternion.copy(_localQuat);
     } else {
-        // If it is in the scene (world space), we manually apply the planet's rotation and position
-        const rotatedOffset = shipPosLocal.clone().applyQuaternion(planet.quaternion);
-        cargoShip.position.copy(planet.position).add(rotatedOffset);
-        
-        // Combine planet rotation with local ship orientation
-        cargoShip.quaternion.copy(localQuat).premultiply(planet.quaternion);
+        // Ship is in world space → apply planet's transform manually
+        _rotatedOffset.copy(_shipPos).applyQuaternion(planet.quaternion);
+        cargoShip.position.copy(planet.position).add(_rotatedOffset);
+        cargoShip.quaternion.copy(_localQuat).premultiply(planet.quaternion);
     }
 }
