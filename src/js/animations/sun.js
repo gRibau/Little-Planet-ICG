@@ -109,12 +109,27 @@ export function updateSunTransition(state, deltaTime) {
             state.animationTimer = 0;
 
             // Record initial positions for consuming
-            state.consumableModelsData = state.consumableModels.map(model => ({
-                model: model,
-                startPos: model.position.clone(),
-                startScale: model.scale.clone(),
-                consumed: false
-            }));
+            state.consumableModelsData = state.consumableModels.map(model => {
+                const data = {
+                    model: model,
+                    startPos: model.position.clone(),
+                    startQuat: model.quaternion.clone(),
+                    startScale: model.scale.clone(),
+                    startParent: model.parent,
+                    consumed: false
+                };
+                
+                // Maintain world transform while moving to scene
+                if (model.parent && model.parent !== state.scene) {
+                    state.scene.attach(model);
+                }
+                
+                // Now the model is a child of scene. Its current position/scale is world-relative.
+                data.consumeStartPos = model.position.clone();
+                data.consumeStartScale = model.scale.clone();
+                
+                return data;
+            });
         }
     } else if (state.clickStage === 3) {
         state.animationTimer += deltaTime;
@@ -129,10 +144,10 @@ export function updateSunTransition(state, deltaTime) {
             if (data.consumed) return;
 
             // Move towards black hole
-            data.model.position.lerpVectors(data.startPos, state.blackHole.position, easeInT);
+            data.model.position.lerpVectors(data.consumeStartPos, state.blackHole.position, easeInT);
 
             // Scale down
-            data.model.scale.lerpVectors(data.startScale, _zeroScale, easeInT);
+            data.model.scale.lerpVectors(data.consumeStartScale, _zeroScale, easeInT);
 
             if (t >= 1.0) {
                 state.scene.remove(data.model);
@@ -185,9 +200,14 @@ export function updateSunTransition(state, deltaTime) {
 
                 // Restore consumed models
                 state.consumableModelsData.forEach(data => {
-                    data.model.scale.copy(data.startScale);
+                    if (data.startParent) {
+                        data.startParent.add(data.model);
+                    } else {
+                        state.scene.add(data.model);
+                    }
                     data.model.position.copy(data.startPos);
-                    state.scene.add(data.model);
+                    data.model.quaternion.copy(data.startQuat);
+                    data.model.scale.copy(data.startScale);
                 });
             }
         } else {

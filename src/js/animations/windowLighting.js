@@ -38,7 +38,12 @@ export function updateModelWindowLighting(model, planet, sun, options = {}) {
     planet.getWorldPosition(_planetWorldPos);
     sun.getWorldPosition(_sunWorldPos);
 
-    _surfaceNormal.copy(_modelWorldPos).sub(_planetWorldPos).normalize();
+    _surfaceNormal.copy(_modelWorldPos).sub(_planetWorldPos);
+    if (_surfaceNormal.lengthSq() < 0.00001) {
+        _surfaceNormal.set(0, 1, 0); // Fallback normal to prevent NaN
+    } else {
+        _surfaceNormal.normalize();
+    }
     _toSun.copy(_sunWorldPos).sub(_modelWorldPos).normalize();
 
     const sunDot = _surfaceNormal.dot(_toSun);
@@ -49,6 +54,10 @@ export function updateModelWindowLighting(model, planet, sun, options = {}) {
     }
 
     const lightingState = model.userData.windowLightingState;
+    if (isNaN(lightingState.blend)) {
+        lightingState.blend = targetBlend || 0;
+    }
+    
     const t = 1 - Math.exp(-transitionSpeed * deltaTime);
     lightingState.blend = THREE.MathUtils.lerp(lightingState.blend, targetBlend, t);
 
